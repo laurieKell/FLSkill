@@ -3,20 +3,20 @@ library(plyr)       # for ddply and dlply/ldply
 library(ggplot2)    # for plotting
 library(ggpubr)     # for ggarrange and annotate_figure
 
+# Internal function to compute AUC using a trapezoidal rule
+computeAUC<-function(TPR, FPR) {
+  ord=order(FPR)
+  TPR=TPR[ord]
+  FPR=FPR[ord]
+  # Standard trapezoidal integration
+  sum(diff(FPR) * (head(TPR, -1) + tail(TPR, -1)) / 2)}
+
 skillScore<-function(x, y, threshold=NULL, reference=1) {
 
     # If no thresholds provided, use the unique sorted values of y
     if (is.null(threshold))
        threshold=sort(unique(y))
     
-    # Internal function to compute AUC using a trapezoidal rule
-    computeAUC<-function(TPR, FPR) {
-          ord=order(FPR)
-          TPR=TPR[ord]
-          FPR=FPR[ord]
-          # Standard trapezoidal integration
-          sum(diff(FPR) * (head(TPR, -1) + tail(TPR, -1)) / 2)}
-          
     # Compute performance metrics over all candidate thresholds
     results=sapply(threshold, function(thresh) {
         TP=sum(x >= reference & y >= thresh)
