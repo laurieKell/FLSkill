@@ -5,7 +5,7 @@
 \title{Calculate ROC (Receiver Operating Characteristic) statistics for two numeric vectors.}
 \usage{
 roc2(state, ind, ...)
-}
+}  
 \arguments{
 \item{state}{A numeric vector representing the state values.}
 
