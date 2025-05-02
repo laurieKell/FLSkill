@@ -81,7 +81,12 @@ skillPlot<-function(object, state, ind, threshold=1, reference=1, xLabel="", lim
   smry=ddply(cbind(dat,threshold=threshold), .(Scenario), with, {
     om=state>threshold
     roc1=rocFn(om,ind)
-    AUC=with(roc1,computeAUC(TPR=TPR,FPR=FPR))
+    AUC=with(roc1,function(TPR, FPR) {
+               ord=order(FPR)
+               TPR=TPR[ord]
+               FPR=FPR[ord]
+               # Standard trapezoidal integration
+               sum(diff(FPR) * (head(TPR, -1) + tail(TPR, -1)) / 2)})
     TPR=roc1$TPR
     FPR=roc1$FPR
     ref=roc1$ind
