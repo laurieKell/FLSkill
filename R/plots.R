@@ -78,15 +78,21 @@ skillPlot<-function(object, state, ind, threshold=1, reference=1, xLabel="", lim
   
   dat=subset(   dat, !is.na(state)&!is.na(ind))
   dat=transform(dat, ratio=(ind-state)/state)
+  
   smry=ddply(cbind(dat,threshold=threshold), .(Scenario), with, {
-    om=state>threshold
-    roc1=rocFn(om,ind)
-    AUC=with(roc1,function(TPR, FPR) {
-               ord=order(FPR)
-               TPR=TPR[ord]
-               FPR=FPR[ord]
-               # Standard trapezoidal integration
-               sum(diff(FPR) * (head(TPR, -1) + tail(TPR, -1)) / 2)})
+    labels=state>threshold
+    roc1={ord           =order(ind, decreasing=TRUE)  
+          labels_ordered=labels[ord]
+          data.frame(
+            TPR   =cumsum( labels_ordered)/sum( labels_ordered),
+            FPR   =cumsum(!labels_ordered)/sum(!labels_ordered),
+            labels=labels_ordered,
+            ind   =ind[ord])}
+    AUC=with(roc1, { ord=order(FPR)
+                     TPR=TPR[ord]
+                     FPR=FPR[ord]
+                     # Standard trapezoidal integration
+                     sum(diff(FPR) * (head(TPR, -1) + tail(TPR, -1)) / 2)})
     TPR=roc1$TPR
     FPR=roc1$FPR
     ref=roc1$ind
