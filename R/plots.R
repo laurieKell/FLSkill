@@ -104,7 +104,7 @@ skillPlot<-function(object, state, ind, threshold=1, reference=1, xLabel="", lim
                    BSS=((TPR-FPR)[flg2])[1],
                    ref=ref[flg2][1],
                    TPR=((TPR)[flag])[1],
-                   FPR=((TPR)[flag])[1],
+                   FPR=((FPR)[flag])[1],
                    TPR2=TPR[flg2][1],
                    FPR2=FPR[flg2][1])
     rtn})
@@ -134,7 +134,6 @@ skillPlot<-function(object, state, ind, threshold=1, reference=1, xLabel="", lim
          x="", 
          y="")
   
-  
   # Predictions plot
   p2=ggplot(dat[sample(seq(dim(dat)[1]),pmin(dim(dat)[1],1000)),])+
     facet_grid(Scenario~.)+
@@ -147,12 +146,12 @@ skillPlot<-function(object, state, ind, threshold=1, reference=1, xLabel="", lim
     geom_label(aes(x=Inf, y=ref,
                    label=paste("BSS=",round(BSS,2))),fill="white",#fnTss(BSS)), 
                hjust=1, vjust=0,
-               size=4.0, col="blue",
+               size=4.0, col="blue", alpha=0.9,
                data=smry)+
     geom_label(aes(x=limits[1], y=1,
                    label=paste("TSS=",round(TSS,2))),fill="white",#fnTss(TSS)), 
                hjust=0, vjust=0, 
-               size=4.0, col="red",
+               size=4.0, col="red", alpha=0.9,
                data=smry)+
     scale_x_log10()+scale_y_log10()+
     theme_bw()+
@@ -180,7 +179,7 @@ skillPlot<-function(object, state, ind, threshold=1, reference=1, xLabel="", lim
                aes(label=paste("AUC=",round(AUC, 2))),
                fill="white",#fnAuc(AUC),
                x   =1.0, y   =0,
-               hjust=1,   vjust=0,
+               hjust=1,   vjust=0, alpha=0.9,
                size=4)+
     labs(title="ROC Curve",
          x="FPR (1-Specificity)",
