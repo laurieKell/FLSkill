@@ -30,4 +30,5 @@ Collate:
     'roc.R'
     'rocFLQ.R'
     'utils.R'
+    'lag.R'
 RoxygenNote: 7.3.2
