@@ -34,6 +34,14 @@ fnAuc<-function(x) {
     aucCol[max(seq(length(chk))[val > chk])]
   })}
 
+fnRoc<-function(labels, ind) {
+            labels <- labels[order(ind, decreasing=TRUE)]
+            data.frame(TPR=cumsum(labels)/sum(labels),
+                       FPR=cumsum(!labels)/sum(!labels),
+                       labels,
+                       reference=sort(ind))
+          }
+
 aucTss<-function(om,mp){
   rtn=FLCandy:::roc2(om,mp) 
   
@@ -101,7 +109,7 @@ skillPlot <- function(data, obs, hat, threshold=1, reference=1, xLabel="", limit
                     FPR2 = FPR[flg2][1])
     rtn
   })
-  rocDat <- ddply(dat, .(Scenario), with, FLCandy:::tryIt(FLSkill::rocFn(obs>1, pred)))
+  rocDat <- ddply(dat, .(Scenario), with, FLCandy:::tryIt(fnRoc(obs>1, pred)))
   
   # ggridges plot
   dt2=melt(dat,c("Scenario"),c("obs","pred"))
