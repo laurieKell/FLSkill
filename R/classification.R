@@ -181,18 +181,6 @@ cmKobe<-function(stock.om,harvest.om,stock.mp,harvest.mp,what=c("red","green","y
   names(dt)[2:3]=c("om","mp")
   cm(dt[,"om"],dt[,"mp"])}
 
-#' @title True Skill Statistic (TSS) Calculator
-#' @description Calculates the True Skill Statistic for binary classification in stock assessments.
-#' @param TP True Positives (correct overfished predictions)
-#' @param TN True Negatives (correct healthy stock predictions)
-#' @param FP False Positives (false overfished predictions)
-#' @param FN False Negatives (false healthy stock predictions)
-#' @return Numeric TSS value ranging from -1 to +1 (perfect skill)
-#' @examples
-#' TSS(TP=45, TN=30, FP=10, FN=15) # Good skill (0.5)
-#' @export
-TSS<-function(TP,TN,FP,FN) TP/(FN+TP) - TN/(FP+TN)
-
 auc_trapz <- function(x, y) {
   sum((x[-length(x)] + x[-1]) * (y[-length(y)] + y[-1])) / (2 * diff(x) * diff(y))
 }
