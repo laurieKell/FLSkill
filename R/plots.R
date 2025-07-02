@@ -65,7 +65,7 @@ aucTss<-function(om,mp){
 #' @export
 skillPlot <- function(data, obs, hat, threshold=1, reference=1, xLabel="", limits=c(0,5)) {
   dat <- transform(data,
-                  obs = eval(sym(obs)),
+                  obs  = eval(sym(obs)),
                   pred = eval(sym(hat)))
   dat <- subset(dat, !is.na(obs) & !is.na(pred))
   dat <- transform(dat, ratio = (pred - obs) / obs)
@@ -102,7 +102,7 @@ skillPlot <- function(data, obs, hat, threshold=1, reference=1, xLabel="", limit
     rtn
   })
   rocDat <- ddply(dat, .(Scenario), with, FLCandy:::tryIt(rocFn(obs > 1, pred)))
-  
+return(dat)
   # ggridges plot
   dt2=melt(dat,c("Scenario"),c("obs","pred"))
   dt2$variable=factor(dt2$variable,levels=c("obs","pred"),
@@ -125,7 +125,7 @@ skillPlot <- function(data, obs, hat, threshold=1, reference=1, xLabel="", limit
     labs(title = "Distribution",
          x="", 
          y="")
-  
+   
   # Predictions plot
   p2=ggplot(dat[sample(seq(dim(dat)[1]),pmin(dim(dat)[1],1000)),])+
     facet_grid(Scenario~.)+
@@ -160,7 +160,7 @@ skillPlot <- function(data, obs, hat, threshold=1, reference=1, xLabel="", limit
     labs(title = "Confusion Matrix",
          x="Operating Model", 
          y="Indicator")
-  
+ 
   p3=ggplot(rocDat)+
     facet_grid(Scenario~.)+
     geom_path( aes(FPR, TPR), alpha=0.5)+

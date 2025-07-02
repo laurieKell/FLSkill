@@ -63,7 +63,7 @@ setMethod("roc2",
 
 #' @rdname rocFn
 #' @export
-setMethod("rocFn", signature(labels="numeric", ind="numeric"),
+setMethod("rocFn", signature(labels="logical", ind="numeric"),
           function(labels, ind) {
             labels <- labels[order(ind, decreasing=TRUE)]
             data.frame(TPR=cumsum(labels)/sum(labels),
