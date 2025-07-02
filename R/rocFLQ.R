@@ -16,9 +16,9 @@
 #'   - TNR (specificity) = TN / (TN + FP)
 #' @examples
 #' set.seed(123)
-#' obs <- rbinom(100, 1, 0.5)
-#' pred <- rnorm(100)
-#' roc_metrics <- roc2(obs, pred)
+#' obs=rbinom(100, 1, 0.5)
+#' pred=rnorm(100)
+#' roc_metrics=roc2(obs, pred)
 #' @references Fielding, A.H. and Bell, J.F. (1997) A review of methods for the assessment of prediction errors in conservation presence/absence models. Environmental Conservation, 24(1), 38-49.
 #' @export
 #' @importFrom stats model.frame

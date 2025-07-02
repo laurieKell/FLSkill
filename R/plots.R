@@ -35,7 +35,7 @@ fnAuc<-function(x) {
   })}
 
 fnRoc<-function(labels, ind) {
-            labels <- labels[order(ind, decreasing=TRUE)]
+            labels=labels[order(ind, decreasing=TRUE)]
             data.frame(TPR=cumsum(labels)/sum(labels),
                        FPR=cumsum(!labels)/sum(!labels),
                        labels,
@@ -65,19 +65,19 @@ aucTss<-function(om,mp){
 #'   }
 #' @examples
 #' set.seed(123)
-#' df <- data.frame(Scenario = rep(1:2, each=100),
+#' df=data.frame(Scenario = rep(1:2, each=100),
 #'                  obs = rlnorm(200, meanlog=log(1), sdlog=0.5),
 #'                  pred = rlnorm(200, meanlog=log(1), sdlog=0.5))
 #' skillPlot(df, obs="obs", hat="pred")
 #' @import ggplot2
 #' @export
-skillPlot <- function(data, obs, hat, threshold=1, reference=1, xLabel="", limits=c(0,5)) {
-  dat <- transform(data,
+skillPlot<-function(data, obs, hat, threshold=1, reference=1, xLabel="", limits=c(0,5)) {
+  dat=transform(data,
                   obs  = eval(sym(obs)),
                   pred = eval(sym(hat)))
-  dat <- subset(dat, !is.na(obs) & !is.na(pred))
-  dat <- transform(dat, ratio = (pred - obs) / obs)
-  smry <- ddply(cbind(dat, threshold=threshold), .(Scenario), with, {
+  dat=subset(dat, !is.na(obs) & !is.na(pred))
+  dat=transform(dat, ratio = (pred - obs) / obs)
+  smry=ddply(cbind(dat, threshold=threshold), .(Scenario), with, {
     labels = obs > threshold
     roc1 = {
       ord = order(pred, decreasing=TRUE)
@@ -109,7 +109,7 @@ skillPlot <- function(data, obs, hat, threshold=1, reference=1, xLabel="", limit
                     FPR2 = FPR[flg2][1])
     rtn
   })
-  rocDat <- ddply(dat, .(Scenario), with, FLCandy:::tryIt(fnRoc(obs>1, pred)))
+  rocDat=ddply(dat, .(Scenario), with, FLCandy:::tryIt(fnRoc(obs>1, pred)))
   
   # ggridges plot
   dt2=melt(dat,c("Scenario"),c("obs","pred"))

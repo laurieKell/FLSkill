@@ -15,7 +15,7 @@
 #'
 #' @examples
 #' \dontrun{
-#' tss_value <- TSS(TP=10, TN=8, FP=2, FN=3)
+#' tss_value=TSS(TP=10, TN=8, FP=2, FN=3)
 #' }
 #'
 #' @export
@@ -34,9 +34,9 @@ setGeneric("TSS", function(TP, TN, FP, FN) standardGeneric("TSS"))
 #'
 #' @examples
 #' \dontrun{
-#' pred <- c(1, -1, 1, -1)
-#' actual <- c(1, -1, -1, 1)
-#' confusion_stats <- PN(pred, actual)
+#' pred=c(1, -1, 1, -1)
+#' actual=c(1, -1, -1, 1)
+#' confusion_stats=PN(pred, actual)
 #' }
 #'
 #' @export
@@ -60,9 +60,9 @@ setGeneric("PN", function(obs, hat) standardGeneric("PN"))
 #'
 #' @examples
 #' \dontrun{
-#' labels <- c(1,0,1,1,0)
-#' scores <- c(0.9, 0.1, 0.8, 0.7, 0.3)
-#' roc_coords <- rocFn(labels, scores)
+#' labels=c(1,0,1,1,0)
+#' scores=c(0.9, 0.1, 0.8, 0.7, 0.3)
+#' roc_coords=rocFn(labels, scores)
 #' }
 #'
 #' @export
@@ -93,6 +93,90 @@ setGeneric("rocFn", function(labels, ind) standardGeneric("rocFn"))
 #' @export
 setGeneric("roc2", function(state, ind, ...) {
   standardGeneric("roc2")
+})
+
+#' @title Skill Score Calculation
+#' @description Calculate prediction skill scores for fishery stock assessment models
+#' @param obs Numeric vector of observed values
+#' @param pred Numeric vector of predicted values
+#' @param reference Reference value for classification
+#' @param threshold Threshold for classification
+#' @return Data.frame with skill metrics
+#' @export
+setGeneric("skillScore", function(obs, pred, reference = NULL, threshold = 1) {
+  standardGeneric("skillScore")
+})
+
+#' @title Skill Summary
+#' @description Comprehensive performance metrics for fishery management procedures
+#' @param obs Numeric vector of observed values
+#' @param pred Numeric vector of predicted values
+#' @return Data.frame with comprehensive skill metrics
+#' @export
+setGeneric("skillSummary", function(obs, pred) {
+  standardGeneric("skillSummary")
+})
+
+#' @title Trend Analysis
+#' @description Calculate trend agreement metrics between time series
+#' @param obs Numeric vector of observed time series
+#' @param pred Numeric vector of predicted time series
+#' @return Data.frame with trend metrics
+#' @export
+setGeneric("trend", function(obs, pred) {
+  standardGeneric("trend")
+})
+
+#' @title State Classification
+#' @description Evaluate stock status classification performance
+#' @param obs Numeric vector of observed stock status
+#' @param pred Numeric vector of predicted stock status
+#' @return Data.frame with classification metrics
+#' @export
+setGeneric("state", function(obs, pred) {
+  standardGeneric("state")
+})
+
+#' @title Variability Comparison
+#' @description Compare variability characteristics between time series
+#' @param obs Numeric vector of observed values
+#' @param pred Numeric vector of predicted values
+#' @return Data.frame with variability ratios
+#' @export
+setGeneric("variability", function(obs, pred) {
+  standardGeneric("variability")
+})
+
+#' @title Time Series Comparison
+#' @description Calculate similarity measures between time series
+#' @param obs Numeric vector of observed time series
+#' @param pred Numeric vector of predicted time series
+#' @return Data.frame with similarity metrics
+#' @export
+setGeneric("compareTS", function(obs, pred) {
+  standardGeneric("compareTS")
+})
+
+#' @title Cross-Correlation Function
+#' @description Find optimal lag between time series
+#' @param obs Numeric vector of observed time series
+#' @param pred Numeric vector of predicted time series
+#' @param lag.max Maximum lag to consider
+#' @return Data.frame with optimal lag and ACF value
+#' @export
+setGeneric("ccfFn", function(obs, pred, lag.max = 5) {
+  standardGeneric("ccfFn")
+})
+
+#' @title Diagnostics
+#' @description Comprehensive diagnostic evaluation
+#' @param obs Numeric vector of observed values
+#' @param pred Numeric vector of predicted values
+#' @param ndemb Embedding dimension for permutation entropy
+#' @return Data.frame with diagnostic metrics
+#' @export
+setGeneric("diagnostics", function(obs, pred, ndemb = 5) {
+  standardGeneric("diagnostics")
 })
 
 

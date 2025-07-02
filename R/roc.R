@@ -39,8 +39,8 @@ setMethod("roc2",
 #' @examples
 #' # In this example, we first generate sample data for state and indicator vectors. 
 #' # Generate sample data
-#' state <- c(0.5, 2.3, 1.2, 1.8, 3.0, 0.7)
-#' indicator <- c(0.6, 2.2, 1.1, 1.9, 2.8, 0.5)
+#' state=c(0.5, 2.3, 1.2, 1.8, 3.0, 0.7)
+#' indicator=c(0.6, 2.2, 1.1, 1.9, 2.8, 0.5)
 #'
 #' # Then, we call the roc function to calculate ROC statistics and print the results.
 #' # Calculate ROC statistics
@@ -65,7 +65,7 @@ setMethod("roc2",
 #' @export
 setMethod("rocFn", signature(labels="logical", ind="numeric"),
           function(labels, ind) {
-            labels <- labels[order(ind, decreasing=TRUE)]
+            labels=labels[order(ind, decreasing=TRUE)]
             data.frame(TPR=cumsum(labels)/sum(labels),
                        FPR=cumsum(!labels)/sum(!labels),
                        labels,
@@ -87,13 +87,13 @@ setMethod("PN", signature(obs="numeric", hat="numeric"),
 setMethod("TSS", signature(TP="numeric", TN="numeric", FP="numeric", FN="numeric"),
           function(TP, TN, FP, FN) {
             # Calculate sensitivity (true positive rate)
-            sensitivity <- TP/(TP+FN)
+            sensitivity=TP/(TP+FN)
             
             # Calculate specificity (true negative rate)
-            specificity <- TN/(TN+FP)
+            specificity=TN/(TN+FP)
             
             # Calculate TSS
-            tss <- sensitivity + specificity - 1
+            tss=sensitivity + specificity - 1
             
             return(tss)
           })

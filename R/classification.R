@@ -10,13 +10,13 @@
 #'   \item pred: Threshold values
 #' }
 #' @examples
-#' obs <- runif(100, 0.5, 1.5) < 1
-#' pred <- rnorm(100)
-#' roc_data <- rocFn2(obs, pred)
+#' obs=runif(100, 0.5, 1.5) < 1
+#' pred=rnorm(100)
+#' roc_data=rocFn2(obs, pred)
 #' @export
-rocFn2 <- function(obs, pred) {
-  ord <- order(pred, decreasing = TRUE)
-  obs_ordered <- obs[ord]
+rocFn2<-function(obs, pred) {
+  ord=order(pred, decreasing = TRUE)
+  obs_ordered=obs[ord]
   data.frame(
     TPR = cumsum(obs_ordered) / sum(obs_ordered),
     FPR = cumsum(!obs_ordered) / sum(!obs_ordered),
@@ -25,85 +25,49 @@ rocFn2 <- function(obs, pred) {
   )
 }
 
-#' @title Calculate Prediction Skill Scores
-#' @description Computes threshold-based skill scores including TSS (True Skill Statistic) and AUC (Area Under the Curve) for fishery stock assessment models.
-#' @param obs Numeric vector of observed values (e.g., survey biomass index)
-#' @param pred Numeric vector of model predictions (e.g., estimated stock biomass)
-#' @param reference Value for status classification (default=1, typical BMSY threshold)
-#' @param threshold Threshold for classification of pred, if not provided optimised, i.e. tuned
-#' @return Data.frame containing optimal threshold and associated metrics:
-#' \itemize{
-#'   \item ref: Optimal reference value
-#'   \item TP: True positives at threshold
-#'   \item TN: True negatives at threshold
-#'   \item FP: False positives at threshold
-#'   \item FN: False negatives at threshold  
-#'   \item TSS: True Skill Statistic (TPR - FPR)
-#'   \item TPR: True Positive Rate (sensitivity)
-#'   \item FPR: False Positive Rate (1 - specificity)
-#'   \item AUC: Area Under ROC Curve
-#' }
-#' @examples
-#' obs <- rlnorm(100, meanlog=log(1), sdlog=0.5)
-#' pred <- obs * exp(rnorm(100, sd=0.3))
-#' skillScore(obs, pred, reference=1)
-#' @importFrom FLCore auc
+#' @rdname skillScore
 #' @export
-skillScore <- function(obs, pred, reference = NULL, threshold = 1) {
-  rocs <- rocFn2(obs > threshold, pred)
-  if (is.null(reference)) {
-    flag <- which.max(rocs$TPR - rocs$FPR)
-    reference <- rocs$pred[flag]
-  } else {
-    flag <- which.min(abs(rocs$pred - reference))
-  }
-  TP <- sum(obs > threshold & pred > rocs$pred[flag])
-  TN <- sum(obs <= threshold & pred <= rocs$pred[flag])
-  FP <- sum(obs > threshold & pred <= rocs$pred[flag])
-  FN <- sum(obs <= threshold & pred > rocs$pred[flag])
-  data.frame(
-    AUC = auc_trapz(rocs$TPR, rocs$FPR),
-    TSS = rocs$TPR[flag] - rocs$FPR[flag],
-    ref = rocs$pred[flag],
-    TPR = rocs$TPR[flag],
-    FPR = rocs$FPR[flag],
-    TP = TP, TN = TN, FP = FP, FN = FN
-  )
-}
+setMethod("skillScore", signature(obs="numeric", pred="numeric"),
+          function(obs, pred, reference = NULL, threshold = 1) {
+            rocs=rocFn2(obs > threshold, pred)
+            if (is.null(reference)) {
+              flag=which.max(rocs$TPR - rocs$FPR)
+              reference=rocs$pred[flag]
+            } else {
+              flag=which.min(abs(rocs$pred - reference))
+            }
+            TP=sum(obs > threshold & pred > rocs$pred[flag])
+            TN=sum(obs <= threshold & pred <= rocs$pred[flag])
+            FP=sum(obs > threshold & pred <= rocs$pred[flag])
+            FN=sum(obs <= threshold & pred > rocs$pred[flag])
+            data.frame(
+              AUC = auc_trapz(rocs$TPR, rocs$FPR),
+              TSS = rocs$TPR[flag] - rocs$FPR[flag],
+              ref = rocs$pred[flag],
+              TPR = rocs$TPR[flag],
+              FPR = rocs$FPR[flag],
+              TP = TP, TN = TN, FP = FP, FN = FN
+            )
+          })
 
-#' @title Stock Assessment Model Summary
-#' @description Computes comprehensive performance metrics for fishery management procedures.
-#' @param obs Numeric vector of observed values (true values)
-#' @param pred Numeric vector of management procedure predictions
-#' @return Data.frame containing:
-#' \itemize{
-#'   \item AUC: Area Under ROC Curve
-#'   \item TSS: True Skill Statistic at reference threshold
-#'   \item BSS: Best achievable skill score
-#'   \item best: optimal reference level to get BSS
-#'   \item TPR/FPR: Rates at reference threshold
-#'   \item TPR2/FPR2: Rates at optimal threshold
-#' }
-#' @examples
-#' obs <- runif(100, 0.5, 1.5)
-#' pred <- obs * exp(rnorm(100, sd=0.2))
-#' skillSummary(obs > 1, pred)
+#' @rdname skillSummary
 #' @export
-skillSummary <- function(obs, pred, reference = NULL) {
-  rocs <- rocFn2(obs, pred)
-  if (is.null(reference)) {
-    flag <- which.max(rocs$TPR - rocs$FPR)
-  } else {
-    flag <- which.min(abs(rocs$pred - reference))
-  }
-  data.frame(
-    AUC = auc_trapz(rocs$TPR, rocs$FPR),
-    TSS = rocs$TPR[flag] - rocs$FPR[flag],
-    ref = rocs$pred[flag],
-    TPR = rocs$TPR[flag],
-    FPR = rocs$FPR[flag]
-  )
-}
+setMethod("skillSummary", signature(obs="numeric", pred="numeric"),
+          function(obs, pred, reference = NULL) {
+            rocs=rocFn2(obs, pred)
+            if (is.null(reference)) {
+              flag=which.max(rocs$TPR - rocs$FPR)
+            } else {
+              flag=which.min(abs(rocs$pred - reference))
+            }
+            data.frame(
+              AUC = auc_trapz(rocs$TPR, rocs$FPR),
+              TSS = rocs$TPR[flag] - rocs$FPR[flag],
+              ref = rocs$pred[flag],
+              TPR = rocs$TPR[flag],
+              FPR = rocs$FPR[flag]
+            )
+          })
 
 skillSummaryOld<-function(om,mp) {
   roc1 = rocFn2(om, mp)
@@ -181,6 +145,6 @@ cmKobe<-function(stock.om,harvest.om,stock.mp,harvest.mp,what=c("red","green","y
   names(dt)[2:3]=c("om","mp")
   cm(dt[,"om"],dt[,"mp"])}
 
-auc_trapz <- function(x, y) {
+auc_trapz<-function(x, y) {
   sum((x[-length(x)] + x[-1]) * (y[-length(y)] + y[-1])) / (2 * diff(x) * diff(y))
 }
