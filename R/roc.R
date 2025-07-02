@@ -74,12 +74,12 @@ setMethod("rocFn", signature(labels="numeric", ind="numeric"),
 
 #' @rdname PN
 #' @export
-setMethod("PN", signature(x="numeric", y="numeric"),
-          function(x, y) {
-            data.frame(TP=sum(x>=0 & y>=0),
-                       TN=sum(x <0 & y< 0),
-                       FP=sum(x>=0 & y< 0),
-                       FN=sum(x <0 & y>=0))
+setMethod("PN", signature(obs="numeric", hat="numeric"),
+          function(obs, hat) {
+            data.frame(TP=sum(obs>=0 & hat>=0),
+                       TN=sum(obs <0 & hat< 0),
+                       FP=sum(obs>=0 & hat< 0),
+                       FN=sum(obs <0 & hat>=0))
           })
 
 #' @rdname TSS

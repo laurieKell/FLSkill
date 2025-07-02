@@ -12,9 +12,9 @@
 #' @examples
 #' obs <- runif(100, 0.5, 1.5) < 1
 #' pred <- rnorm(100)
-#' roc_data <- rocFn(obs, pred)
+#' roc_data <- rocFn1(obs, pred)
 #' @export
-rocFn <- function(obs, pred) {
+rocFn2 <- function(obs, pred) {
   ord <- order(pred, decreasing = TRUE)
   obs_ordered <- obs[ord]
   data.frame(
@@ -50,7 +50,7 @@ rocFn <- function(obs, pred) {
 #' @importFrom FLCore auc
 #' @export
 skillScore <- function(obs, pred, reference = NULL, threshold = 1) {
-  rocs <- rocFn(obs > threshold, pred)
+  rocs <- rocFn2(obs > threshold, pred)
   if (is.null(reference)) {
     flag <- which.max(rocs$TPR - rocs$FPR)
     reference <- rocs$pred[flag]
@@ -90,7 +90,7 @@ skillScore <- function(obs, pred, reference = NULL, threshold = 1) {
 #' skillSummary(obs > 1, pred)
 #' @export
 skillSummary <- function(obs, pred, reference = NULL) {
-  rocs <- rocFn(obs, pred)
+  rocs <- rocFn2(obs, pred)
   if (is.null(reference)) {
     flag <- which.max(rocs$TPR - rocs$FPR)
   } else {
@@ -106,7 +106,7 @@ skillSummary <- function(obs, pred, reference = NULL) {
 }
 
 skillSummaryOld<-function(om,mp) {
-  roc1 = rocFn(om, mp)
+  roc1 = rocFn2(om, mp)
   AUC = auc_trapz(roc1$TPR, roc1$FPR)
   TPR = roc1$TPR
   FPR = roc1$FPR
@@ -196,25 +196,3 @@ TSS<-function(TP,TN,FP,FN) TP/(FN+TP) - TN/(FP+TN)
 auc_trapz <- function(x, y) {
   sum((x[-length(x)] + x[-1]) * (y[-length(y)] + y[-1])) / (2 * diff(x) * diff(y))
 }
-
-#' @title Confusion Matrix Calculator
-#' @description Computes confusion matrix components for stock status classification.
-#' @param x Numeric vector of observed values (e.g., true B/BMSY)
-#' @param y Numeric vector of predicted values
-#' @return Data.frame with:
-#' \itemize{
-#'   \item TP: True positives (both < 1)
-#'   \item TN: True negatives (both >= 1)
-#'   \item FP: False positives (observed <1 but predicted >=1)
-#'   \item FN: False negatives (observed >=1 but predicted <1)
-#' }
-#' @examples
-#' obs=runif(100, 0.5, 1.5)
-#' pred=obs * exp(rnorm(100, sd=0.2))
-#' PN(obs < 1, pred < 1)
-#' @export
-PN<-function(x,y) {
-  data.frame(TP=sum(x > 0 & y > 0),
-             TN=sum(x <=0 & y <=0),
-             FP=sum(x > 0 & y <=0),
-             FN=sum(x <=0 & y > 0))}

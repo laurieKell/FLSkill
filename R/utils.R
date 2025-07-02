@@ -172,30 +172,6 @@ ccfFn <- function(obs, pred, lag.max = 5) {
 #' @export
 TSS <- function(TP, TN, FP, FN) TP / (FN + TP) - TN / (FP + TN)
 
-#' @title Confusion Matrix Calculator
-#' @description Computes confusion matrix components for stock status classification.
-#' @param obs Numeric vector of observed values (e.g., true B/BMSY)
-#' @param pred Numeric vector of predicted values
-#' @return Data.frame with:
-#'   \itemize{
-#'     \item TP: True positives (both < 1)
-#'     \item TN: True negatives (both >= 1)
-#'     \item FP: False positives (observed <1 but predicted >=1)
-#'     \item FN: False negatives (observed >=1 but predicted <1)
-#'   }
-#' @examples
-#' obs <- runif(100, 0.5, 1.5)
-#' pred <- obs * exp(rnorm(100, sd=0.2))
-#' PN(obs < 1, pred < 1)
-#' @export
-PN <- function(obs, pred) {
-  data.frame(
-    TP = sum(obs > 0 & pred > 0),
-    TN = sum(obs <= 0 & pred <= 0),
-    FP = sum(obs > 0 & pred <= 0),
-    FN = sum(obs <= 0 & pred > 0)
-  )
-}
 
 #' @title Area Under the Curve (AUC) via Trapezoidal Rule
 #' @description Computes the area under a curve (AUC) using the trapezoidal rule. Used for ROC curves.

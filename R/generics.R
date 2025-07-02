@@ -27,8 +27,8 @@ setGeneric("TSS", function(TP, TN, FP, FN) standardGeneric("TSS"))
 #' @description Calculates True Positive (TP), True Negative (TN), False Positive (FP), 
 #' and False Negative (FN) counts from predicted and actual values
 #'
-#' @param x Numeric vector of predicted values
-#' @param y Numeric vector of actual values
+#' @param obs Numeric vector of predicted values
+#' @param hat Numeric vector of actual values
 #'
 #' @return A data frame containing TP, TN, FP, and FN counts
 #'
@@ -40,7 +40,7 @@ setGeneric("TSS", function(TP, TN, FP, FN) standardGeneric("TSS"))
 #' }
 #'
 #' @export
-setGeneric("PN", function(x, y) standardGeneric("PN"))
+setGeneric("PN", function(obs, hat) standardGeneric("PN"))
 
 
 #' @title ROC Curve Coordinates
