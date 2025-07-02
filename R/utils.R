@@ -170,8 +170,9 @@ ccfFn <- function(obs, pred, lag.max = 5) {
 #' @examples
 #' TSS(TP = 45, TN = 30, FP = 10, FN = 15) # Good skill (0.5)
 #' @export
-TSS <- function(TP, TN, FP, FN) TP / (FN + TP) - TN / (FP + TN)
-
+setMethod("TSS", signature(TP="numeric",TN="numeric",FP="numeric",FN="numeric"),
+          function(TP,TN,FP,FN) TP/(FN+TP)-TN/(FP+TN)
+          )
 
 #' @title Area Under the Curve (AUC) via Trapezoidal Rule
 #' @description Computes the area under a curve (AUC) using the trapezoidal rule. Used for ROC curves.

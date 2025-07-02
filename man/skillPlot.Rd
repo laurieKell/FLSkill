@@ -6,8 +6,8 @@
 \usage{
 skillPlot(
   data,
-  obs_col,
-  pred_col,
+  obs,
+  hat,
   threshold = 1,
   reference = 1,
   xLabel = "",
@@ -17,9 +17,9 @@ skillPlot(
 \arguments{
 \item{data}{Data.frame containing assessment results}
 
-\item{obs_col}{Character name of column with true stock status}
+\item{obs}{Character name of column with true stock status}
 
-\item{pred_col}{Character name of column with predicted status}
+\item{hat}{Character name of column with predicted status}
 
 \item{threshold}{Numeric threshold for classification (default=1)}
 
@@ -45,5 +45,5 @@ set.seed(123)
 df <- data.frame(Scenario = rep(1:2, each=100),
                  obs = rlnorm(200, meanlog=log(1), sdlog=0.5),
                  pred = rlnorm(200, meanlog=log(1), sdlog=0.5))
-skillPlot(df, obs_col="obs", pred_col="pred")
+skillPlot(df, obs="obs", hat="pred")
 }

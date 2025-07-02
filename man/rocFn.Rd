@@ -2,12 +2,12 @@
 % Please edit documentation in R/generics.R, R/roc.R
 \name{rocFn}
 \alias{rocFn}
-\alias{rocFn,numeric,numeric-method}
+\alias{rocFn,logical,numeric-method}
 \title{ROC Curve Coordinates}
 \usage{
 rocFn(labels, ind)
 
-\S4method{rocFn}{numeric,numeric}(labels, ind)
+\S4method{rocFn}{logical,numeric}(labels, ind)
 }
 \arguments{
 \item{labels}{Binary vector of true labels}
