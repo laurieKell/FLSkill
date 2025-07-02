@@ -12,7 +12,7 @@
 #' @examples
 #' obs <- runif(100, 0.5, 1.5) < 1
 #' pred <- rnorm(100)
-#' roc_data <- rocFn1(obs, pred)
+#' roc_data <- rocFn2(obs, pred)
 #' @export
 rocFn2 <- function(obs, pred) {
   ord <- order(pred, decreasing = TRUE)

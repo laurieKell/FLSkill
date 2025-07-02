@@ -101,8 +101,8 @@ skillPlot <- function(data, obs, hat, threshold=1, reference=1, xLabel="", limit
                     FPR2 = FPR[flg2][1])
     rtn
   })
-  rocDat <- ddply(dat, .(Scenario), with, FLCandy:::tryIt(rocFn(obs > 1, pred)))
-
+  rocDat <- ddply(dat, .(Scenario), with, FLCandy:::tryIt(FLSkill::rocFn(obs>1, pred)))
+  
   # ggridges plot
   dt2=melt(dat,c("Scenario"),c("obs","pred"))
   dt2$variable=factor(dt2$variable,levels=c("obs","pred"),
