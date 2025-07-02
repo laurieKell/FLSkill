@@ -40,80 +40,72 @@ aucTss<-function(om,mp){
   data.frame("tss"=data.frame(with(rtn[abs(rtn$reference-1)==min(abs(rtn$reference-1)),],TPR-FPR))[1,],
              data.frame("auc"=pROC:::auc(as.character(rtn$label),rtn$reference)))}
 
-
-
-# Internal function to compute AUC using a trapezoidal rule
-computeAUC<-function(TPR, FPR) {
-  ord=order(FPR)
-  TPR=TPR[ord]
-  FPR=FPR[ord]
-  # Standard trapezoidal integration
-  sum(diff(FPR) * (head(TPR, -1) + tail(TPR, -1)) / 2)}
-
 #' @title Stock Assessment Skill Visualizer
 #' @description Generates diagnostic plots for management procedure evaluation.
-#' @param x Data.frame containing assessment results
-#' @param state Character name of column with true stock status
-#' @param ind Character name of column with predicted status
+#' @param data Data.frame containing assessment results
+#' @param obs_col Character name of column with true stock status
+#' @param pred_col Character name of column with predicted status
+#' @param threshold Numeric threshold for classification (default=1)
+#' @param reference Reference value for status classification (default=1)
 #' @param xLabel Axis label for plots (default="")
 #' @param limits X-axis limits for density plots (default=c(0,5))
 #' @return ggplot object with 3-panel visualization:
-#' \itemize{
-#'   \item a) Density plots of observed vs predicted status
-#'   \item b) Scatterplot with reference lines
-#'   \item c) ROC curve with AUC
-#' }
+#'   \itemize{
+#'     \item a) Density plots of observed vs predicted status
+#'     \item b) Scatterplot with reference lines
+#'     \item c) ROC curve with AUC
+#'   }
 #' @examples
-#' \dontrun{
-#' data(assessment_data)
-#' skillPlot(assessment_data, "true_status", "predicted_status")
-#' }
+#' set.seed(123)
+#' df <- data.frame(Scenario = rep(1:2, each=100),
+#'                  obs = rlnorm(200, meanlog=log(1), sdlog=0.5),
+#'                  pred = rlnorm(200, meanlog=log(1), sdlog=0.5))
+#' skillPlot(df, obs_col="obs", pred_col="pred")
 #' @import ggplot2
 #' @export
-skillPlot<-function(object, state, ind, threshold=1, reference=1, xLabel="", limits=c(0,5)) {
-  
-  dat=transform(object,
-                state=eval(sym(state)),
-                ind  =eval(sym(ind)))
-  
-  dat=subset(   dat, !is.na(state)&!is.na(ind))
-  dat=transform(dat, ratio=(ind-state)/state)
-  
-  smry=ddply(cbind(dat,threshold=threshold), .(Scenario), with, {
-    labels=state>threshold
-    roc1={ord           =order(ind, decreasing=TRUE)  
-          labels_ordered=labels[ord]
-          data.frame(
-            TPR   =cumsum( labels_ordered)/sum( labels_ordered),
-            FPR   =cumsum(!labels_ordered)/sum(!labels_ordered),
-            labels=labels_ordered,
-            ind   =ind[ord])}
-    AUC=with(roc1, { ord=order(FPR)
-                     TPR=TPR[ord]
-                     FPR=FPR[ord]
-                     # Standard trapezoidal integration
-                     sum(diff(FPR) * (head(TPR, -1) + tail(TPR, -1)) / 2)})
-    TPR=roc1$TPR
-    FPR=roc1$FPR
-    ref=roc1$ind
-    flag=min((ref-1)^2)==(ref-1)^2
-    flg2=(TPR-FPR)==max(TPR-FPR)
-    
-    rtn=data.frame(AUC=AUC,
-                   TSS=((TPR-FPR)[flag])[1],
-                   BSS=((TPR-FPR)[flg2])[1],
-                   ref=ref[flg2][1],
-                   TPR=((TPR)[flag])[1],
-                   FPR=((FPR)[flag])[1],
-                   TPR2=TPR[flg2][1],
-                   FPR2=FPR[flg2][1])
-    rtn})
-  
-  rocDat=ddply(dat, .(Scenario), with, FLCandy:::tryIt(rocFn(state>1,ind)))
+skillPlot <- function(data, obs_col, pred_col, threshold=1, reference=1, xLabel="", limits=c(0,5)) {
+  dat <- transform(data,
+                  obs = eval(sym(obs_col)),
+                  pred = eval(sym(pred_col)))
+  dat <- subset(dat, !is.na(obs) & !is.na(pred))
+  dat <- transform(dat, ratio = (pred - obs) / obs)
+  smry <- ddply(cbind(dat, threshold=threshold), .(Scenario), with, {
+    labels = obs > threshold
+    roc1 = {
+      ord = order(pred, decreasing=TRUE)
+      labels_ordered = labels[ord]
+      data.frame(
+        TPR = cumsum(labels_ordered) / sum(labels_ordered),
+        FPR = cumsum(!labels_ordered) / sum(!labels_ordered),
+        labels = labels_ordered,
+        pred = pred[ord])
+    }
+    AUC = with(roc1, {
+      ord = order(FPR)
+      TPR = TPR[ord]
+      FPR = FPR[ord]
+      sum(diff(FPR) * (head(TPR, -1) + tail(TPR, -1)) / 2)
+    })
+    TPR = roc1$TPR
+    FPR = roc1$FPR
+    ref = roc1$pred
+    flag = min((ref-1)^2) == (ref-1)^2
+    flg2 = (TPR-FPR) == max(TPR-FPR)
+    rtn = data.frame(AUC = AUC,
+                    TSS = ((TPR-FPR)[flag])[1],
+                    BSS = ((TPR-FPR)[flg2])[1],
+                    ref = ref[flg2][1],
+                    TPR = ((TPR)[flag])[1],
+                    FPR = ((FPR)[flag])[1],
+                    TPR2 = TPR[flg2][1],
+                    FPR2 = FPR[flg2][1])
+    rtn
+  })
+  rocDat <- ddply(dat, .(Scenario), with, FLCandy:::tryIt(rocFn(obs > 1, pred)))
   
   # ggridges plot
-  dt2=melt(dat,c("Scenario"),c("state","ind"))
-  dt2$variable=factor(dt2$variable,levels=c("state","ind"),
+  dt2=melt(dat,c("Scenario"),c("obs","pred"))
+  dt2$variable=factor(dt2$variable,levels=c("obs","pred"),
                       labels=c("Operating\nModel","Indicator"))
   p1=ggplot(dt2, aes(x=value, y=variable, fill=variable)) +
     geom_density_ridges(alpha=0.5, scale=1.2, rel_min_height=0.01) +
@@ -137,7 +129,7 @@ skillPlot<-function(object, state, ind, threshold=1, reference=1, xLabel="", lim
   # Predictions plot
   p2=ggplot(dat[sample(seq(dim(dat)[1]),pmin(dim(dat)[1],1000)),])+
     facet_grid(Scenario~.)+
-    geom_point(aes(state,ind), size=1.25, alpha=0.75)+
+    geom_point(aes(obs,pred), size=1.25, alpha=0.75)+
     geom_vline(xintercept=1)+
     geom_hline(aes(yintercept=1), col="red")+
     geom_hline(aes(yintercept=ref),data=smry,col="blue")+
@@ -157,14 +149,14 @@ skillPlot<-function(object, state, ind, threshold=1, reference=1, xLabel="", lim
     theme_bw()+
     theme(legend.position="none",
           plot.title=element_text(hjust=0))+
-    geom_label(aes(x=10^(log10(max(dat$state, na.rm = TRUE))), 
-                   y=10^(log10(max(dat$ind,   na.rm = TRUE)))),label="TP",hjust=0.5,vjust= 0.5,size=4)+
-    geom_label(aes(x=10^(log10(min(dat$state, na.rm = TRUE))), 
-                   y=10^(log10(max(dat$ind,   na.rm = TRUE)))),label="FP",hjust=0,  vjust= 0.5,size=4)+
-    geom_label(aes(x=10^(log10(max(dat$state, na.rm = TRUE))), 
-                   y=10^(log10(min(dat$ind,   na.rm = TRUE)))),label="FN",hjust=0.5,vjust=-0.75,size=4)+
-    geom_label(aes(x=10^(log10(min(dat$state, na.rm = TRUE))), 
-                   y=10^(log10(min(dat$ind,   na.rm = TRUE)))),label="TN",hjust=0,  vjust=-0.75,size=4)+
+    geom_label(aes(x=10^(log10(max(dat$obs, na.rm = TRUE))), 
+                   y=10^(log10(max(dat$pred,   na.rm = TRUE)))),label="TP",hjust=0.5,vjust= 0.5,size=4)+
+    geom_label(aes(x=10^(log10(min(dat$obs, na.rm = TRUE))), 
+                   y=10^(log10(max(dat$pred,   na.rm = TRUE)))),label="FP",hjust=0,  vjust= 0.5,size=4)+
+    geom_label(aes(x=10^(log10(max(dat$obs, na.rm = TRUE))), 
+                   y=10^(log10(min(dat$pred,   na.rm = TRUE)))),label="FN",hjust=0.5,vjust=-0.75,size=4)+
+    geom_label(aes(x=10^(log10(min(dat$obs, na.rm = TRUE))), 
+                   y=10^(log10(min(dat$pred,   na.rm = TRUE)))),label="TN",hjust=0,  vjust=-0.75,size=4)+
     labs(title = "Confusion Matrix",
          x="Operating Model", 
          y="Indicator")
