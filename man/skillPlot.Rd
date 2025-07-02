@@ -5,9 +5,9 @@
 \title{Stock Assessment Skill Visualizer}
 \usage{
 skillPlot(
-  object,
-  state,
-  ind,
+  data,
+  obs_col,
+  pred_col,
   threshold = 1,
   reference = 1,
   xLabel = "",
@@ -15,30 +15,35 @@ skillPlot(
 )
 }
 \arguments{
-\item{state}{Character name of column with true stock status}
+\item{data}{Data.frame containing assessment results}
 
-\item{ind}{Character name of column with predicted status}
+\item{obs_col}{Character name of column with true stock status}
+
+\item{pred_col}{Character name of column with predicted status}
+
+\item{threshold}{Numeric threshold for classification (default=1)}
+
+\item{reference}{Reference value for status classification (default=1)}
 
 \item{xLabel}{Axis label for plots (default="")}
 
 \item{limits}{X-axis limits for density plots (default=c(0,5))}
-
-\item{x}{Data.frame containing assessment results}
 }
 \value{
 ggplot object with 3-panel visualization:
-\itemize{
-  \item a) Density plots of observed vs predicted status
-  \item b) Scatterplot with reference lines
-  \item c) ROC curve with AUC
-}
+  \itemize{
+    \item a) Density plots of observed vs predicted status
+    \item b) Scatterplot with reference lines
+    \item c) ROC curve with AUC
+  }
 }
 \description{
 Generates diagnostic plots for management procedure evaluation.
 }
 \examples{
-\dontrun{
-data(assessment_data)
-skillPlot(assessment_data, "true_status", "predicted_status")
-}
+set.seed(123)
+df <- data.frame(Scenario = rep(1:2, each=100),
+                 obs = rlnorm(200, meanlog=log(1), sdlog=0.5),
+                 pred = rlnorm(200, meanlog=log(1), sdlog=0.5))
+skillPlot(df, obs_col="obs", pred_col="pred")
 }

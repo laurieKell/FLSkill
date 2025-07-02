@@ -4,12 +4,12 @@
 \alias{diagnostics}
 \title{Comprehensive Diagnostic Evaluation}
 \usage{
-diagnostics(obs, hat, ndemb = 5)
+diagnostics(obs, pred, ndemb = 5)
 }
 \arguments{
 \item{obs}{Numeric vector of observed values}
 
-\item{hat}{Numeric vector of predicted values}
+\item{pred}{Numeric vector of predicted values}
 
 \item{ndemb}{Embedding dimension for permutation entropy calculation (default=5)}
 }
@@ -23,7 +23,7 @@ Integrates multiple performance metrics for stock assessment model validation.
 Requires helper functions: stdz(), permutation_entropy(), ordinal_pattern_distribution()
 }
 \examples{
-obs=runif(100, 0.8, 1.2)
-hat=obs * exp(rnorm(100, sd=0.15))
-diagnostics(obs, hat)
+obs <- runif(100, 0.8, 1.2)
+pred <- obs * exp(rnorm(100, sd=0.15))
+diagnostics(obs, pred)
 }

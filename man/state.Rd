@@ -4,12 +4,12 @@
 \alias{state}
 \title{Stock Status Classification Metrics}
 \usage{
-state(obs, hat)
+state(obs, pred)
 }
 \arguments{
 \item{obs}{Numeric vector of observed stock status values}
 
-\item{hat}{Numeric vector of predicted status values}
+\item{pred}{Numeric vector of predicted status values}
 }
 \value{
 Data.frame containing:
@@ -26,7 +26,7 @@ Evaluates performance of stock status classification (Overfished/Healthy).
 Status determined using threshold at 1 (B/BMSY). Check variable names in function code.
 }
 \examples{
-obs_status=runif(100, 0.5, 1.5)
-pred_status=obs_status * exp(rnorm(100, sd=0.2))
-state(obs_status, pred_status)
+obs <- runif(100, 0.5, 1.5)
+pred <- obs * exp(rnorm(100, sd=0.2))
+state(obs, pred)
 }

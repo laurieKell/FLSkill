@@ -4,12 +4,12 @@
 \alias{compareTS}
 \title{Time Series Comparison Metrics}
 \usage{
-compareTS(ts1, ts2)
+compareTS(obs, pred)
 }
 \arguments{
-\item{ts1}{Numeric vector (e.g., observed biomass index)}
+\item{obs}{Numeric vector (e.g., observed biomass index)}
 
-\item{ts2}{Numeric vector (e.g., model-predicted biomass)}
+\item{pred}{Numeric vector (e.g., model-predicted biomass)}
 }
 \value{
 Data.frame with:
@@ -23,7 +23,7 @@ Data.frame with:
 Calculates similarity measures between two stock assessment time series.
 }
 \examples{
-obs=cumsum(rnorm(20))
-pred=obs + rnorm(20, sd=0.5)
+obs <- cumsum(rnorm(20))
+pred <- obs + rnorm(20, sd=0.5)
 compareTS(obs, pred)
 }

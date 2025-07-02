@@ -4,12 +4,12 @@
 \alias{trend}
 \title{Trend Agreement Metrics}
 \usage{
-trend(obs, hat)
+trend(obs, pred)
 }
 \arguments{
 \item{obs}{Numeric vector of observed time series (e.g., biomass index)}
 
-\item{hat}{Numeric vector of predicted time series}
+\item{pred}{Numeric vector of predicted time series}
 }
 \value{
 Data.frame containing:
@@ -23,7 +23,7 @@ Data.frame containing:
 Calculates correlation measures between observed and predicted stock trends.
 }
 \examples{
-obs_trend=cumsum(rnorm(20))
-pred_trend=obs_trend + rnorm(20, sd=0.5)
-trend(obs_trend, pred_trend)
+obs <- cumsum(rnorm(20))
+pred <- obs + rnorm(20, sd=0.5)
+trend(obs, pred)
 }

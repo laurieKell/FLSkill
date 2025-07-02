@@ -4,12 +4,12 @@
 \alias{variability}
 \title{Variability Comparison Metrics}
 \usage{
-variability(obs, hat)
+variability(obs, pred)
 }
 \arguments{
 \item{obs}{Numeric vector of observed values}
 
-\item{hat}{Numeric vector of predicted values}
+\item{pred}{Numeric vector of predicted values}
 }
 \value{
 Data.frame containing variability ratios:
@@ -23,7 +23,7 @@ Data.frame containing variability ratios:
 Compares variability characteristics between observed and predicted time series.
 }
 \examples{
-obs=rlnorm(100, meanlog=log(1), sdlog=0.4)
-hat=obs * exp(rnorm(100, sd=0.1))
-variability(obs, hat)
+obs <- rlnorm(100, meanlog=log(1), sdlog=0.4)
+pred <- obs * exp(rnorm(100, sd=0.1))
+variability(obs, pred)
 }

@@ -4,12 +4,12 @@
 \alias{ccfFn}
 \title{Optimal Lag Finder}
 \usage{
-ccfFn(obs, hat, lag.max = 5)
+ccfFn(obs, pred, lag.max = 5)
 }
 \arguments{
 \item{obs}{Observed time series (e.g., survey index)}
 
-\item{hat}{Predicted time series (e.g., model output)}
+\item{pred}{Predicted time series (e.g., model output)}
 
 \item{lag.max}{Maximum lag to consider (default=5)}
 }
@@ -20,7 +20,7 @@ Data.frame with optimal lag and corresponding ACF value
 Identifies lag with maximum cross-correlation between stock assessment time series.
 }
 \examples{
-obs=sin(seq(0, 2*pi, length=50)) + rnorm(50)
-hat=lag(obs, 2) + rnorm(50, sd=0.2)
-ccfFn(obs, hat)
+obs <- sin(seq(0, 2*pi, length=50)) + rnorm(50)
+pred <- lag(obs, 2) + rnorm(50, sd=0.2)
+ccfFn(obs, pred)
 }

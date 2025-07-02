@@ -4,12 +4,12 @@
 \alias{skillSummary}
 \title{Stock Assessment Model Summary}
 \usage{
-skillSummary(label, ind, reference = NULL)
+skillSummary(obs, pred, reference = NULL)
 }
 \arguments{
-\item{ind}{Numeric vector of management procedure predictions}
+\item{obs}{Numeric vector of observed values (true values)}
 
-\item{state}{Numeric vector of operating model outputs (true values)}
+\item{pred}{Numeric vector of management procedure predictions}
 }
 \value{
 Data.frame containing:
@@ -26,7 +26,7 @@ Data.frame containing:
 Computes comprehensive performance metrics for fishery management procedures.
 }
 \examples{
-state=runif(100, 0.5, 1.5)
-ind=state * exp(rnorm(100, sd=0.2))
-skillSummary(state>1, ind)
+obs <- runif(100, 0.5, 1.5)
+pred <- obs * exp(rnorm(100, sd=0.2))
+skillSummary(obs > 1, pred)
 }

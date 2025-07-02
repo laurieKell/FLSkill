@@ -4,16 +4,16 @@
 \alias{skillScore}
 \title{Calculate Prediction Skill Scores}
 \usage{
-skillScore(state, ind, reference = NULL, threshold = 1)
+skillScore(obs, pred, reference = NULL, threshold = 1)
 }
 \arguments{
-\item{reference}{value for status classification (default=1, typical BMSY threshold)}
+\item{obs}{Numeric vector of observed values (e.g., survey biomass index)}
 
-\item{threshold}{for classification of ind, if not provided optimised, i.e. tuned}
+\item{pred}{Numeric vector of model predictions (e.g., estimated stock biomass)}
 
-\item{x}{Numeric vector of model predictions (e.g., estimated stock biomass)}
+\item{reference}{Value for status classification (default=1, typical BMSY threshold)}
 
-\item{y}{Numeric vector of observed values (e.g., survey biomass index)}
+\item{threshold}{Threshold for classification of pred, if not provided optimised, i.e. tuned}
 }
 \value{
 Data.frame containing optimal threshold and associated metrics:
@@ -33,8 +33,7 @@ Data.frame containing optimal threshold and associated metrics:
 Computes threshold-based skill scores including TSS (True Skill Statistic) and AUC (Area Under the Curve) for fishery stock assessment models.
 }
 \examples{
-# Simulate stock assessment data
-obsStatus=rlnorm(100, meanlog=log(1), sdlog=0.5)
-predStatus=obsStatus * exp(rnorm(100, sd=0.3))
-skillScore(predStatus, obsStatus > 1, reference=1)
+obs <- rlnorm(100, meanlog=log(1), sdlog=0.5)
+pred <- obs * exp(rnorm(100, sd=0.3))
+skillScore(obs, pred, reference=1)
 }
