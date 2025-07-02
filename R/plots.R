@@ -43,8 +43,8 @@ aucTss<-function(om,mp){
 #' @title Stock Assessment Skill Visualizer
 #' @description Generates diagnostic plots for management procedure evaluation.
 #' @param data Data.frame containing assessment results
-#' @param obs_col Character name of column with true stock status
-#' @param pred_col Character name of column with predicted status
+#' @param obs Character name of column with true stock status
+#' @param hat Character name of column with predicted status
 #' @param threshold Numeric threshold for classification (default=1)
 #' @param reference Reference value for status classification (default=1)
 #' @param xLabel Axis label for plots (default="")
@@ -60,13 +60,13 @@ aucTss<-function(om,mp){
 #' df <- data.frame(Scenario = rep(1:2, each=100),
 #'                  obs = rlnorm(200, meanlog=log(1), sdlog=0.5),
 #'                  pred = rlnorm(200, meanlog=log(1), sdlog=0.5))
-#' skillPlot(df, obs_col="obs", pred_col="pred")
+#' skillPlot(df, obs="obs", hat="pred")
 #' @import ggplot2
 #' @export
-skillPlot <- function(data, obs_col, pred_col, threshold=1, reference=1, xLabel="", limits=c(0,5)) {
+skillPlot <- function(data, obs, hat, threshold=1, reference=1, xLabel="", limits=c(0,5)) {
   dat <- transform(data,
-                  obs = eval(sym(obs_col)),
-                  pred = eval(sym(pred_col)))
+                  obs = eval(sym(obs)),
+                  pred = eval(sym(hat)))
   dat <- subset(dat, !is.na(obs) & !is.na(pred))
   dat <- transform(dat, ratio = (pred - obs) / obs)
   smry <- ddply(cbind(dat, threshold=threshold), .(Scenario), with, {
