@@ -101,9 +101,14 @@ setGeneric("roc2", function(state, ind, ...) {
 #' @param pred Numeric vector of predicted values
 #' @param reference Reference value for classification
 #' @param threshold Threshold for classification
-#' @return Data.frame with skill metrics
+#' @param CI Logical, calculate confidence intervals via bootstrap (default=FALSE)
+#' @param CI_level Confidence level for intervals (default=0.95)
+#' @param nBoot Number of bootstrap samples if CI=TRUE (default=1000)
+#' @param seed Random seed for bootstrap reproducibility (default=NULL)
+#' @return Data.frame with skill metrics and optional confidence intervals
 #' @export
-setGeneric("skillScore", function(obs, pred, reference = NULL, threshold = 1) {
+setGeneric("skillScore", function(obs, pred, reference = NULL, threshold = 1,
+                                   CI = FALSE, CI_level = 0.95, nBoot = 1000, seed = NULL) {
   standardGeneric("skillScore")
 })
 
@@ -111,9 +116,16 @@ setGeneric("skillScore", function(obs, pred, reference = NULL, threshold = 1) {
 #' @description Comprehensive performance metrics for fishery management procedures
 #' @param obs Numeric vector of observed values
 #' @param pred Numeric vector of predicted values
-#' @return Data.frame with comprehensive skill metrics
+#' @param reference Reference value for classification (default=NULL, uses optimal)
+#' @param CI Logical, calculate confidence intervals via bootstrap (default=FALSE)
+#' @param CI_level Confidence level for intervals (default=0.95)
+#' @param nBoot Number of bootstrap samples if CI=TRUE (default=1000)
+#' @param seed Random seed for bootstrap reproducibility (default=NULL)
+#' @param ... Additional arguments passed to methods
+#' @return Data.frame with comprehensive skill metrics and optional confidence intervals
 #' @export
-setGeneric("skillSummary", function(obs, pred) {
+setGeneric("skillSummary", function(obs, pred, reference = NULL, CI = FALSE,
+                                     CI_level = 0.95, nBoot = 1000, seed = NULL, ...) {
   standardGeneric("skillSummary")
 })
 
@@ -177,6 +189,19 @@ setGeneric("ccfFn", function(obs, pred, lag.max = 5) {
 #' @export
 setGeneric("diagnostics", function(obs, pred, ndemb = 5) {
   standardGeneric("diagnostics")
+})
+
+#' @title Skill Plot
+#' @description Generates flexible diagnostic plots for management procedure evaluation.
+#' Supports multiple input types (numeric vectors, data.frame columns, FLQuants) and 
+#' customizable visualization panels (density, scatter, ROC curves).
+#' @param obs Observed values (numeric vector, character column name with data.frame, or FLQuant)
+#' @param pred Predicted values (numeric vector, character column name with data.frame, or FLQuant)
+#' @param ... Additional arguments passed to methods (data, group, threshold, reference, panels, etc.)
+#' @return ggplot object with diagnostic visualization panels
+#' @export
+setGeneric("skillPlot", function(obs, pred, ...) {
+  standardGeneric("skillPlot")
 })
 
 

@@ -136,4 +136,119 @@ conf_matrix_basic<-function(obs, pred) {
   )
 }
 
+#' @title Bootstrap Confidence Intervals for Skill Metrics
+#' @description Calculates bootstrap confidence intervals for AUC, TSS, TPR, and FPR.
+#' @param obs Numeric vector of observed values
+#' @param pred Numeric vector of predicted values
+#' @param threshold Threshold for classification (default=1)
+#' @param reference Reference value for classification (default=1)
+#' @param nBoot Number of bootstrap samples (default=1000)
+#' @param ciLevel Confidence level (default=0.95)
+#' @param seed Random seed for reproducibility (default=NULL)
+#' @return Data.frame with metric names, estimates, and CI bounds
+#' @keywords internal
+bootstrapSkillMetricsCI <- function(obs, pred, threshold = 1, reference = 1,
+                                     nBoot = 1000, ciLevel = 0.95, seed = NULL) {
+  if (!is.null(seed)) {
+    set.seed(seed)
+  }
+  
+  # Remove NAs
+  valid = !is.na(obs) & !is.na(pred)
+  obs = obs[valid]
+  pred = pred[valid]
+  
+  n = length(obs)
+  if (n < 10) {
+    warning("Sample size too small for bootstrap CI calculation")
+    return(data.frame(
+      metric = c("AUC", "TSS", "TPR", "FPR"),
+      estimate = NA_real_,
+      ciLower = NA_real_,
+      ciUpper = NA_real_
+    ))
+  }
+  
+  # Calculate original metrics (rocFn2 is in same package, call directly)
+  rocs = rocFn2(obs > threshold, pred)
+  aucOrig = auc_trapz(rocs$TPR, rocs$FPR)
+  
+  # Find reference point
+  flag = which.min(abs(rocs$pred - reference))
+  tssOrig = rocs$TPR[flag] - rocs$FPR[flag]
+  tprOrig = rocs$TPR[flag]
+  fprOrig = rocs$FPR[flag]
+  
+  # Bootstrap samples
+  bootAuc = numeric(nBoot)
+  bootTss = numeric(nBoot)
+  bootTpr = numeric(nBoot)
+  bootFpr = numeric(nBoot)
+  
+  for (i in 1:nBoot) {
+    # Resample with replacement
+    idx = sample(n, n, replace = TRUE)
+    obsBoot = obs[idx]
+    predBoot = pred[idx]
+    
+    # Calculate metrics for bootstrap sample
+    tryCatch({
+      rocsBoot = rocFn2(obsBoot > threshold, predBoot)
+      
+      # AUC
+      if (length(rocsBoot$TPR) > 1 && length(rocsBoot$FPR) > 1) {
+        bootAuc[i] = auc_trapz(rocsBoot$TPR, rocsBoot$FPR)
+      } else {
+        bootAuc[i] = NA_real_
+      }
+      
+      # Find reference point
+      flagBoot = which.min(abs(rocsBoot$pred - reference))
+      if (length(flagBoot) > 0 && flagBoot[1] <= length(rocsBoot$TPR)) {
+        bootTss[i] = rocsBoot$TPR[flagBoot[1]] - rocsBoot$FPR[flagBoot[1]]
+        bootTpr[i] = rocsBoot$TPR[flagBoot[1]]
+        bootFpr[i] = rocsBoot$FPR[flagBoot[1]]
+      } else {
+        bootTss[i] = NA_real_
+        bootTpr[i] = NA_real_
+        bootFpr[i] = NA_real_
+      }
+    }, error = function(e) {
+      bootAuc[i] = NA_real_
+      bootTss[i] = NA_real_
+      bootTpr[i] = NA_real_
+      bootFpr[i] = NA_real_
+    })
+  }
+  
+  # Calculate percentiles for CI
+  alpha = 1 - ciLevel
+  lowerPercentile = alpha / 2
+  upperPercentile = 1 - alpha / 2
+  
+  # Function to calculate CI, handling NAs
+  calcCI <- function(bootValues, original) {
+    bootClean = bootValues[!is.na(bootValues)]
+    if (length(bootClean) < 10) {
+      return(c(NA_real_, NA_real_))
+    }
+    quantile(bootClean, probs = c(lowerPercentile, upperPercentile), na.rm = TRUE)
+  }
+  
+  # Calculate CIs
+  aucCI = calcCI(bootAuc, aucOrig)
+  tssCI = calcCI(bootTss, tssOrig)
+  tprCI = calcCI(bootTpr, tprOrig)
+  fprCI = calcCI(bootFpr, fprOrig)
+  
+  # Return results
+  data.frame(
+    metric = c("AUC", "TSS", "TPR", "FPR"),
+    estimate = c(aucOrig, tssOrig, tprOrig, fprOrig),
+    ciLower = c(aucCI[1], tssCI[1], tprCI[1], fprCI[1]),
+    ciUpper = c(aucCI[2], tssCI[2], tprCI[2], fprCI[2]),
+    stringsAsFactors = FALSE
+  )
+}
+
 
