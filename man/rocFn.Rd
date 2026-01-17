@@ -38,20 +38,20 @@ rocCoords = rocFn(labels, scores)
 
 # In this example, we first generate sample data for state and indicator vectors. 
 # Generate sample data
-state=c(0.5, 2.3, 1.2, 1.8, 3.0, 0.7)
-indicator=c(0.6, 2.2, 1.1, 1.9, 2.8, 0.5)
+state = c(0.5, 2.3, 1.2, 1.8, 3.0, 0.7)
+indicator = c(0.6, 2.2, 1.1, 1.9, 2.8, 0.5)
 
 # Then, we call the roc function to calculate ROC statistics and print the results.
 # Calculate ROC statistics
-roc_result=roc(state, indicator)
+rocResult = roc2(state, indicator)
 
 # Print the ROC statistics
-roc_result
+rocResult
 
 #Plot the ROC curve using the ggplot2 package. 
 
 library(ggplot2)
-ggplot(roc_result, aes(x = FPR, y = TPR)) +
+ggplot(rocResult, aes(x = FPR, y = TPR)) +
   geom_line() +
   geom_abline(intercept = 0, slope = 1, linetype = "dashed") +
   labs(x = "False Positive Rate (FPR)", y = "True Positive Rate (TPR)") +
