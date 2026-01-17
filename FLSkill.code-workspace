@@ -1,0 +1,49 @@
+{
+	"folders": [
+		{
+			"path": "."
+		}
+	],
+	"settings": {
+		"files.exclude": {
+			"**/.Rproj.user": true,
+			"**/.Rhistory": true,
+			"**/.RData": true,
+			"**/.Ruserdata": true,
+			"**/*.Rcheck": true,
+			"**/src/*.o": true,
+			"**/src/*.so": true,
+			"**/src/*.dll": true
+		},
+		"files.associations": {
+			"*.R": "r",
+			"*.Rd": "r",
+			"*.Rmd": "rmd"
+		},
+		"files.encoding": "utf8",
+		"editor.tabSize": 2,
+		"editor.insertSpaces": true,
+		"editor.formatOnSave": false,
+		"r.rterm.windows": "",
+		"r.rpath.windows": "",
+		"r.alwaysUseActiveTerminal": true,
+		"r.bracketedPaste": true,
+		"[r]": {
+			"editor.defaultFormatter": "Ikuyadeu.r",
+			"editor.tabSize": 2,
+			"editor.insertSpaces": true
+		},
+		"[rmd]": {
+			"editor.defaultFormatter": "Ikuyadeu.r",
+			"editor.tabSize": 2
+		}
+	},
+	"extensions": {
+		"recommendations": [
+			"Ikuyadeu.r",
+			"REditorSupport.r",
+			"quarto-dev.quarto",
+			"yzhang.markdown-all-in-one"
+		]
+	}
+}
