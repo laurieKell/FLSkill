@@ -3,6 +3,7 @@
 
 library(FLCore)
 library(FLSkill)
+library(statcomp)
 
 # Create sample FLQuants objects for demonstration
 set.seed(123)

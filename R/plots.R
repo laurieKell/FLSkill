@@ -132,9 +132,10 @@ calculateSkillMetrics <- function(obs, pred, threshold = 1, reference = 1) {
 #' @return ggplot object with diagnostic visualization panels
 #' @examples
 #' set.seed(123)
+#' obs  = rlnorm(200, meanlog=log(1), sdlog=0.5),
 #' df = data.frame(Scenario = rep(1:2, each=100),
-#'                  obs = rlnorm(200, meanlog=log(1), sdlog=0.5),
-#'                  pred = rlnorm(200, meanlog=log(1), sdlog=0.5))
+#'                  obs  = obs,
+#'                  pred = obs*rlnorm(200, meanlog=log(1), sdlog=0.1))
 #' # Using column names with data.frame
 #' skillPlot(obs="obs", pred="pred", data=df)
 #' 
