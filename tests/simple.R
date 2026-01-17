@@ -22,7 +22,7 @@ ggplot(testDF)+
   geom_point(aes(OM,Indicator))+
   xlab("True Values")+ylab("Indicator")
 
-skillPlot(testDF,obs="OM",hat="Indicator")
+skillPlot(obs="OM", pred="Indicator", data=testDF)
 
 pROC::auc(testDF$OM>1,testDF$Indicator)
 

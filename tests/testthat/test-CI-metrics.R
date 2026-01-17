@@ -6,11 +6,11 @@ test_that("skillScore returns CIs when requested", {
   pred = obs * exp(rnorm(100, sd = 0.2))
   
   # Without CI
-  result_no_ci = skillScore(obs, pred, CI = FALSE)
+  result_no_ci = skillScore(obs, pred, ci = FALSE)
   expect_false(any(grepl("CI", names(result_no_ci))))
   
   # With CI (using fewer bootstrap samples for speed)
-  result_ci = skillScore(obs, pred, CI = TRUE, nBoot = 100, seed = 123)
+  result_ci = skillScore(obs, pred, ci = TRUE, nBoot = 100, seed = 123)
   
   # Check that CI columns exist
   expect_true("AUC_CI_lower" %in% names(result_ci))
@@ -45,11 +45,11 @@ test_that("skillSummary returns CIs when requested", {
   pred = obs * exp(rnorm(100, sd = 0.2))
   
   # Without CI
-  result_no_ci = skillSummary(obs, pred, CI = FALSE)
+  result_no_ci = skillSummary(obs, pred, ci = FALSE)
   expect_false(any(grepl("CI", names(result_no_ci))))
   
   # With CI
-  result_ci = skillSummary(obs, pred, CI = TRUE, nBoot = 100, seed = 123)
+  result_ci = skillSummary(obs, pred, ci = TRUE, nBoot = 100, seed = 123)
   
   # Check that CI columns exist
   expect_true("AUC_CI_lower" %in% names(result_ci))
@@ -74,7 +74,7 @@ test_that("CI calculation handles edge cases", {
   pred_small = obs_small * exp(rnorm(10, sd = 0.2))
   
   # Should handle small samples gracefully
-  result = skillScore(obs_small, pred_small, CI = TRUE, nBoot = 50, seed = 123)
+  result = skillScore(obs_small, pred_small, ci = TRUE, nBoot = 50, seed = 123)
   expect_true(is.data.frame(result))
   # CIs might be NA for very small samples, which is acceptable
   
@@ -82,7 +82,7 @@ test_that("CI calculation handles edge cases", {
   obs_perf = c(rep(0, 50), rep(1, 50))
   pred_perf = c(rnorm(50, mean = 0, sd = 0.5), rnorm(50, mean = 2, sd = 0.5))
   
-  result_perf = skillScore(obs_perf, pred_perf, threshold = 0.5, CI = TRUE, nBoot = 100, seed = 123)
+  result_perf = skillScore(obs_perf, pred_perf, threshold = 0.5, ci = TRUE, nBoot = 100, seed = 123)
   expect_true(is.data.frame(result_perf))
   expect_true(result_perf$AUC > 0.9)  # Should be high for perfect separation
 })
@@ -93,10 +93,10 @@ test_that("CI level parameter works", {
   pred = obs * exp(rnorm(100, sd = 0.2))
   
   # 90% CI
-  result_90 = skillScore(obs, pred, CI = TRUE, CI_level = 0.90, nBoot = 100, seed = 123)
+  result_90 = skillScore(obs, pred, ci = TRUE, ciLevel = 0.90, nBoot = 100, seed = 123)
   
   # 95% CI (default)
-  result_95 = skillScore(obs, pred, CI = TRUE, CI_level = 0.95, nBoot = 100, seed = 123)
+  result_95 = skillScore(obs, pred, ci = TRUE, ciLevel = 0.95, nBoot = 100, seed = 123)
   
   # 90% CI should be narrower than 95% CI
   ci_width_90 = result_90$AUC_CI_upper - result_90$AUC_CI_lower
@@ -111,8 +111,8 @@ test_that("Seed parameter provides reproducibility", {
   pred = obs * exp(rnorm(100, sd = 0.2))
   
   # Same seed should give same results
-  result1 = skillScore(obs, pred, CI = TRUE, nBoot = 100, seed = 456)
-  result2 = skillScore(obs, pred, CI = TRUE, nBoot = 100, seed = 456)
+  result1 = skillScore(obs, pred, ci = TRUE, nBoot = 100, seed = 456)
+  result2 = skillScore(obs, pred, ci = TRUE, nBoot = 100, seed = 456)
   
   expect_equal(result1$AUC_CI_lower, result2$AUC_CI_lower, tolerance = 1e-6)
   expect_equal(result1$AUC_CI_upper, result2$AUC_CI_upper, tolerance = 1e-6)
@@ -126,9 +126,9 @@ test_that("CI calculation is consistent across different reference values", {
   pred = obs * exp(rnorm(100, sd = 0.2))
   
   # Different reference values
-  result_ref1 = skillScore(obs, pred, reference = 0.8, CI = TRUE, nBoot = 100, seed = 123)
-  result_ref2 = skillScore(obs, pred, reference = 1.0, CI = TRUE, nBoot = 100, seed = 123)
-  result_ref3 = skillScore(obs, pred, reference = 1.2, CI = TRUE, nBoot = 100, seed = 123)
+  result_ref1 = skillScore(obs, pred, reference = 0.8, ci = TRUE, nBoot = 100, seed = 123)
+  result_ref2 = skillScore(obs, pred, reference = 1.0, ci = TRUE, nBoot = 100, seed = 123)
+  result_ref3 = skillScore(obs, pred, reference = 1.2, ci = TRUE, nBoot = 100, seed = 123)
   
   # All should have valid CIs
   expect_true(all(!is.na(result_ref1[c("AUC_CI_lower", "AUC_CI_upper")])))

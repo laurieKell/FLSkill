@@ -1,58 +1,56 @@
 setMethod("roc2",
           signature(state = "numeric", ind = "numeric"),
           function(state, ind, ...) {
-            order = order(ind, decreasing = TRUE)
-            state = state[order]
-            ind = ind[order]
+            ord = order(ind, decreasing = TRUE)
+            state = state[ord]
+            ind = ind[ord]
             label = state > 1
             
-            cumn = seq(1, length(label))
+            # Calculate ROC statistics
+            tpr = cumsum(label) / sum(label)
+            fpr = cumsum(!label) / sum(!label)
             
-            TPR = cumsum(label) / sum(label)
-            FPR = cumsum(!label) / sum(!label)
+            tp = cumsum(label)
+            fp = cumsum(!label)
+            tn = sum(!label) - fp
+            fn = sum(label) - tp
             
-            TP = cumsum(label)
-            FP = cumsum(!label)
+            tss = (tp / (tp + fn) - fp / (fp + tn))
             
-            TN = sum(!label) - FP
-            FN = sum(label) - TP
-            
-            TSS = (TP / (TP + FN) - FP / (FP + TN))
-            
-            result_df = data.frame(
+            resultDf = data.frame(
               state = state,
               label = label,
               ind = ind,
-              TPR = TPR,
-              FPR = FPR,
-              TP = TP,
-              TN = TN,
-              FP = FP,
-              FN = FN,
-              TSS = TSS,
-              order = order
+              TPR = tpr,
+              FPR = fpr,
+              TP = tp,
+              TN = tn,
+              FP = fp,
+              FN = fn,
+              TSS = tss,
+              order = ord
             )
             
-            return(result_df)
+            return(resultDf)
           })
 
 #' @examples
 #' # In this example, we first generate sample data for state and indicator vectors. 
 #' # Generate sample data
-#' state=c(0.5, 2.3, 1.2, 1.8, 3.0, 0.7)
-#' indicator=c(0.6, 2.2, 1.1, 1.9, 2.8, 0.5)
+#' state = c(0.5, 2.3, 1.2, 1.8, 3.0, 0.7)
+#' indicator = c(0.6, 2.2, 1.1, 1.9, 2.8, 0.5)
 #'
 #' # Then, we call the roc function to calculate ROC statistics and print the results.
 #' # Calculate ROC statistics
-#' roc_result=roc(state, indicator)
+#' rocResult = roc2(state, indicator)
 #'
 #' # Print the ROC statistics
-#' roc_result
+#' rocResult
 #'
 #' #Plot the ROC curve using the ggplot2 package. 
 #' 
 #' library(ggplot2)
-#' ggplot(roc_result, aes(x = FPR, y = TPR)) +
+#' ggplot(rocResult, aes(x = FPR, y = TPR)) +
 #'   geom_line() +
 #'   geom_abline(intercept = 0, slope = 1, linetype = "dashed") +
 #'   labs(x = "False Positive Rate (FPR)", y = "True Positive Rate (TPR)") +
@@ -63,23 +61,23 @@ setMethod("roc2",
 
 #' @rdname rocFn
 #' @export
-setMethod("rocFn", signature(labels="logical", ind="numeric"),
-          function(labels, ind) {
-            labels=labels[order(ind, decreasing=TRUE)]
-            data.frame(TPR=cumsum(labels)/sum(labels),
-                       FPR=cumsum(!labels)/sum(!labels),
+setMethod("rocFn", signature(labels="logical", scores="numeric"),
+          function(labels, scores) {
+            labels = labels[order(scores, decreasing = TRUE)]
+            data.frame(TPR = cumsum(labels) / sum(labels),
+                       FPR = cumsum(!labels) / sum(!labels),
                        labels,
-                       reference=sort(ind))
+                       reference = sort(scores))
           })
 
 #' @rdname PN
 #' @export
-setMethod("PN", signature(obs="numeric", hat="numeric"),
-          function(obs, hat) {
-            data.frame(TP=sum(obs>=0 & hat>=0),
-                       TN=sum(obs <0 & hat< 0),
-                       FP=sum(obs>=0 & hat< 0),
-                       FN=sum(obs <0 & hat>=0))
+setMethod("PN", signature(obs="numeric", pred="numeric"),
+          function(obs, pred) {
+            data.frame(TP = sum(obs >= 0 & pred >= 0),
+                       TN = sum(obs < 0 & pred < 0),
+                       FP = sum(obs >= 0 & pred < 0),
+                       FN = sum(obs < 0 & pred >= 0))
           })
 
 #' @rdname TSS
@@ -87,14 +85,13 @@ setMethod("PN", signature(obs="numeric", hat="numeric"),
 setMethod("TSS", signature(TP="numeric", TN="numeric", FP="numeric", FN="numeric"),
           function(TP, TN, FP, FN) {
             # Calculate sensitivity (true positive rate)
-            sensitivity=TP/(TP+FN)
+            sensitivity = TP / (TP + FN)
             
             # Calculate specificity (true negative rate)
-            specificity=TN/(TN+FP)
+            specificity = TN / (TN + FP)
             
             # Calculate TSS
-            tss=sensitivity + specificity - 1
+            tss = sensitivity + specificity - 1
             
             return(tss)
           })
-

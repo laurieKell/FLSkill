@@ -10,8 +10,8 @@ skillScore(
   pred,
   reference = NULL,
   threshold = 1,
-  CI = FALSE,
-  CI_level = 0.95,
+  ci = FALSE,
+  ciLevel = 0.95,
   nBoot = 1000,
   seed = NULL
 )
@@ -21,8 +21,8 @@ skillScore(
   pred,
   reference = NULL,
   threshold = 1,
-  CI = FALSE,
-  CI_level = 0.95,
+  ci = FALSE,
+  ciLevel = 0.95,
   nBoot = 1000,
   seed = NULL
 )
@@ -36,11 +36,11 @@ skillScore(
 
 \item{threshold}{Threshold for classification}
 
-\item{CI}{Logical, calculate confidence intervals via bootstrap (default=FALSE)}
+\item{ci}{Logical, calculate confidence intervals via bootstrap (default=FALSE)}
 
-\item{CI_level}{Confidence level for intervals (default=0.95)}
+\item{ciLevel}{Confidence level for intervals (default=0.95)}
 
-\item{nBoot}{Number of bootstrap samples if CI=TRUE (default=1000)}
+\item{nBoot}{Number of bootstrap samples if ci=TRUE (default=1000)}
 
 \item{seed}{Random seed for bootstrap reproducibility (default=NULL)}
 }
@@ -51,7 +51,7 @@ Data.frame with skill metrics and optional confidence intervals
 Calculate prediction skill scores for fishery stock assessment models
 }
 \details{
-When CI=TRUE, bootstrap confidence intervals are calculated for AUC, TSS, TPR, and FPR.
+When ci=TRUE, bootstrap confidence intervals are calculated for AUC, TSS, TPR, and FPR.
 The bootstrap method resamples the data with replacement to estimate the sampling
 distribution of each metric. Confidence intervals are added as additional columns:
 AUC_CI_lower, AUC_CI_upper, TSS_CI_lower, TSS_CI_upper, TPR_CI_lower, TPR_CI_upper,
@@ -59,10 +59,10 @@ FPR_CI_lower, FPR_CI_upper.
 }
 \examples{
 # Basic usage
-obs <- rlnorm(100, meanlog=log(1), sdlog=0.5)
-pred <- obs * exp(rnorm(100, sd=0.3))
+obs = rlnorm(100, meanlog=log(1), sdlog=0.5)
+pred = obs * exp(rnorm(100, sd=0.3))
 skillScore(obs, pred, reference=1)
 
 # With confidence intervals
-skillScore(obs, pred, reference=1, CI=TRUE, nBoot=1000, seed=123)
+skillScore(obs, pred, reference=1, ci=TRUE, nBoot=1000, seed=123)
 }

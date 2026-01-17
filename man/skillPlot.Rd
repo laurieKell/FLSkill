@@ -80,7 +80,7 @@ customizable visualization panels (density, scatter, ROC curves).
 }
 \examples{
 set.seed(123)
-df=data.frame(Scenario = rep(1:2, each=100),
+df = data.frame(Scenario = rep(1:2, each=100),
                  obs = rlnorm(200, meanlog=log(1), sdlog=0.5),
                  pred = rlnorm(200, meanlog=log(1), sdlog=0.5))
 # Using column names with data.frame

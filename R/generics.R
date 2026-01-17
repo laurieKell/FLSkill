@@ -27,20 +27,20 @@ setGeneric("TSS", function(TP, TN, FP, FN) standardGeneric("TSS"))
 #' @description Calculates True Positive (TP), True Negative (TN), False Positive (FP), 
 #' and False Negative (FN) counts from predicted and actual values
 #'
-#' @param obs Numeric vector of predicted values
-#' @param hat Numeric vector of actual values
+#' @param obs Numeric vector of observed values
+#' @param pred Numeric vector of predicted values
 #'
 #' @return A data frame containing TP, TN, FP, and FN counts
 #'
 #' @examples
 #' \dontrun{
-#' pred=c(1, -1, 1, -1)
-#' actual=c(1, -1, -1, 1)
-#' confusion_stats=PN(pred, actual)
+#' obs = c(1, -1, 1, -1)
+#' pred = c(1, -1, -1, 1)
+#' confusionStats = PN(obs, pred)
 #' }
 #'
 #' @export
-setGeneric("PN", function(obs, hat) standardGeneric("PN"))
+setGeneric("PN", function(obs, pred) standardGeneric("PN"))
 
 
 #' @title ROC Curve Coordinates
@@ -60,13 +60,13 @@ setGeneric("PN", function(obs, hat) standardGeneric("PN"))
 #'
 #' @examples
 #' \dontrun{
-#' labels=c(1,0,1,1,0)
-#' scores=c(0.9, 0.1, 0.8, 0.7, 0.3)
-#' roc_coords=rocFn(labels, scores)
+#' labels = c(1,0,1,1,0)
+#' scores = c(0.9, 0.1, 0.8, 0.7, 0.3)
+#' rocCoords = rocFn(labels, scores)
 #' }
 #'
 #' @export
-setGeneric("rocFn", function(labels, ind) standardGeneric("rocFn"))
+setGeneric("rocFn", function(labels, scores) standardGeneric("rocFn"))
 
 #' Calculate ROC (Receiver Operating Characteristic) statistics for two numeric vectors.
 #'
@@ -101,14 +101,14 @@ setGeneric("roc2", function(state, ind, ...) {
 #' @param pred Numeric vector of predicted values
 #' @param reference Reference value for classification
 #' @param threshold Threshold for classification
-#' @param CI Logical, calculate confidence intervals via bootstrap (default=FALSE)
-#' @param CI_level Confidence level for intervals (default=0.95)
-#' @param nBoot Number of bootstrap samples if CI=TRUE (default=1000)
+#' @param ci Logical, calculate confidence intervals via bootstrap (default=FALSE)
+#' @param ciLevel Confidence level for intervals (default=0.95)
+#' @param nBoot Number of bootstrap samples if ci=TRUE (default=1000)
 #' @param seed Random seed for bootstrap reproducibility (default=NULL)
 #' @return Data.frame with skill metrics and optional confidence intervals
 #' @export
 setGeneric("skillScore", function(obs, pred, reference = NULL, threshold = 1,
-                                   CI = FALSE, CI_level = 0.95, nBoot = 1000, seed = NULL) {
+                                   ci = FALSE, ciLevel = 0.95, nBoot = 1000, seed = NULL) {
   standardGeneric("skillScore")
 })
 
@@ -117,15 +117,15 @@ setGeneric("skillScore", function(obs, pred, reference = NULL, threshold = 1,
 #' @param obs Numeric vector of observed values
 #' @param pred Numeric vector of predicted values
 #' @param reference Reference value for classification (default=NULL, uses optimal)
-#' @param CI Logical, calculate confidence intervals via bootstrap (default=FALSE)
-#' @param CI_level Confidence level for intervals (default=0.95)
-#' @param nBoot Number of bootstrap samples if CI=TRUE (default=1000)
+#' @param ci Logical, calculate confidence intervals via bootstrap (default=FALSE)
+#' @param ciLevel Confidence level for intervals (default=0.95)
+#' @param nBoot Number of bootstrap samples if ci=TRUE (default=1000)
 #' @param seed Random seed for bootstrap reproducibility (default=NULL)
 #' @param ... Additional arguments passed to methods
 #' @return Data.frame with comprehensive skill metrics and optional confidence intervals
 #' @export
-setGeneric("skillSummary", function(obs, pred, reference = NULL, CI = FALSE,
-                                     CI_level = 0.95, nBoot = 1000, seed = NULL, ...) {
+setGeneric("skillSummary", function(obs, pred, reference = NULL, ci = FALSE,
+                                     ciLevel = 0.95, nBoot = 1000, seed = NULL, ...) {
   standardGeneric("skillSummary")
 })
 
@@ -173,10 +173,10 @@ setGeneric("compareTS", function(obs, pred) {
 #' @description Find optimal lag between time series
 #' @param obs Numeric vector of observed time series
 #' @param pred Numeric vector of predicted time series
-#' @param lag.max Maximum lag to consider
+#' @param lagMax Maximum lag to consider
 #' @return Data.frame with optimal lag and ACF value
 #' @export
-setGeneric("ccfFn", function(obs, pred, lag.max = 5) {
+setGeneric("ccfFn", function(obs, pred, lagMax = 5) {
   standardGeneric("ccfFn")
 })
 
@@ -184,10 +184,10 @@ setGeneric("ccfFn", function(obs, pred, lag.max = 5) {
 #' @description Comprehensive diagnostic evaluation
 #' @param obs Numeric vector of observed values
 #' @param pred Numeric vector of predicted values
-#' @param ndemb Embedding dimension for permutation entropy
+#' @param nDemb Embedding dimension for permutation entropy
 #' @return Data.frame with diagnostic metrics
 #' @export
-setGeneric("diagnostics", function(obs, pred, ndemb = 5) {
+setGeneric("diagnostics", function(obs, pred, nDemb = 5) {
   standardGeneric("diagnostics")
 })
 

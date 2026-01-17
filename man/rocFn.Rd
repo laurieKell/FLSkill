@@ -6,11 +6,11 @@
 \alias{rocFn,FLQuant,FLQuant-method}
 \title{ROC Curve Coordinates}
 \usage{
-rocFn(labels, ind)
+rocFn(labels, scores)
 
-\S4method{rocFn}{logical,numeric}(labels, ind)
+\S4method{rocFn}{logical,numeric}(labels, scores)
 
-\S4method{rocFn}{FLQuant,FLQuant}(labels, ind)
+\S4method{rocFn}{FLQuant,FLQuant}(labels, scores)
 }
 \arguments{
 \item{labels}{Binary vector of true labels}
@@ -31,9 +31,9 @@ Calculates the coordinates for a Receiver Operating Characteristic (ROC) curve
 }
 \examples{
 \dontrun{
-labels=c(1,0,1,1,0)
-scores=c(0.9, 0.1, 0.8, 0.7, 0.3)
-roc_coords=rocFn(labels, scores)
+labels = c(1,0,1,1,0)
+scores = c(0.9, 0.1, 0.8, 0.7, 0.3)
+rocCoords = rocFn(labels, scores)
 }
 
 # In this example, we first generate sample data for state and indicator vectors. 

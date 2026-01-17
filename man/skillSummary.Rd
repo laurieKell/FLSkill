@@ -3,14 +3,15 @@
 \name{skillSummary}
 \alias{skillSummary}
 \alias{skillSummary,numeric,numeric-method}
+\alias{skillSummary,logical,numeric-method}
 \title{Skill Summary}
 \usage{
 skillSummary(
   obs,
   pred,
   reference = NULL,
-  CI = FALSE,
-  CI_level = 0.95,
+  ci = FALSE,
+  ciLevel = 0.95,
   nBoot = 1000,
   seed = NULL,
   ...
@@ -20,8 +21,18 @@ skillSummary(
   obs,
   pred,
   reference = NULL,
-  CI = FALSE,
-  CI_level = 0.95,
+  ci = FALSE,
+  ciLevel = 0.95,
+  nBoot = 1000,
+  seed = NULL
+)
+
+\S4method{skillSummary}{logical,numeric}(
+  obs,
+  pred,
+  reference = NULL,
+  ci = FALSE,
+  ciLevel = 0.95,
   nBoot = 1000,
   seed = NULL
 )
@@ -33,11 +44,11 @@ skillSummary(
 
 \item{reference}{Reference value for classification (default=NULL, uses optimal)}
 
-\item{CI}{Logical, calculate confidence intervals via bootstrap (default=FALSE)}
+\item{ci}{Logical, calculate confidence intervals via bootstrap (default=FALSE)}
 
-\item{CI_level}{Confidence level for intervals (default=0.95)}
+\item{ciLevel}{Confidence level for intervals (default=0.95)}
 
-\item{nBoot}{Number of bootstrap samples if CI=TRUE (default=1000)}
+\item{nBoot}{Number of bootstrap samples if ci=TRUE (default=1000)}
 
 \item{seed}{Random seed for bootstrap reproducibility (default=NULL)}
 
@@ -50,16 +61,16 @@ Data.frame with comprehensive skill metrics and optional confidence intervals
 Comprehensive performance metrics for fishery management procedures
 }
 \details{
-When CI=TRUE, bootstrap confidence intervals are calculated for AUC, TSS, TPR, and FPR.
+When ci=TRUE, bootstrap confidence intervals are calculated for AUC, TSS, TPR, and FPR.
 The bootstrap method resamples the data with replacement to estimate the sampling
 distribution of each metric. Confidence intervals are added as additional columns.
 }
 \examples{
 # Basic usage
-obs <- runif(100, 0.5, 1.5)
-pred <- obs * exp(rnorm(100, sd=0.2))
+obs = runif(100, 0.5, 1.5)
+pred = obs * exp(rnorm(100, sd=0.2))
 skillSummary(obs > 1, pred)
 
 # With confidence intervals
-skillSummary(obs > 1, pred, CI=TRUE, n_boot=1000, seed=123)
+skillSummary(obs > 1, pred, ci=TRUE, nBoot=1000, seed=123)
 }

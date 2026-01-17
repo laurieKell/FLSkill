@@ -43,7 +43,9 @@ setMethod("variability", signature(obs="numeric", pred="numeric"),
 #' @rdname diagnostics
 #' @export
 setMethod("diagnostics", signature(obs="numeric", pred="numeric"),
-          function(obs, pred, ndemb = 5) {
+          function(obs, pred, nDemb = 5) {
+            # Standardize data (z-score normalization)
+            stdz = function(x) (x - mean(x, na.rm = TRUE)) / sd(x, na.rm = TRUE)
             roc = rocFn(stdz(obs) > 1, stdz(pred))
             tss = skillScore(stdz(pred), stdz(obs) - 1)
             
@@ -58,7 +60,7 @@ setMethod("diagnostics", signature(obs="numeric", pred="numeric"),
                 tss       = tss$TSS,
                 fpr       = tss$FPR,
                 tpr       = tss$TPR,
-                entropy   = permutation_entropy(ordinal_pattern_distribution(obs, ndemb = ndemb))
+                entropy   = permutation_entropy(ordinal_pattern_distribution(obs, ndemb = nDemb))
               )
             )
             
@@ -89,8 +91,8 @@ setMethod("compareTS", signature(obs="numeric", pred="numeric"),
 #' @rdname ccfFn
 #' @export
 setMethod("ccfFn", signature(obs="numeric", pred="numeric"),
-          function(obs, pred, lag.max = 5) {
-            rtn=ccf(obs, pred, plot = FALSE, lag.max = lag.max)
+          function(obs, pred, lagMax = 5) {
+            rtn=ccf(obs, pred, plot = FALSE, lag.max = lagMax)
             subset(data.frame(lag = rtn$lag, acf = rtn$acf), acf == max(acf))
           })
 

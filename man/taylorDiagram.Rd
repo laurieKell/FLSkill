@@ -5,33 +5,33 @@
 \title{Taylor Diagram Generator}
 \usage{
 taylorDiagram(
-  min_R = 0.25,
-  max_R = 1.75,
+  minR = 0.25,
+  maxR = 1.75,
   contours = 7,
-  n_lines = 10,
-  x_0 = 1,
-  ref_r_min = 0.25,
-  ref_r_max = 2,
-  ref_contours = 8,
+  nLines = 10,
+  x0 = 1,
+  refRMin = 0.25,
+  refRMax = 2,
+  refContours = 8,
   full = FALSE
 )
 }
 \arguments{
-\item{min_R}{Minimum reference value (default=0.25)}
+\item{minR}{Minimum reference value (default=0.25)}
 
-\item{max_R}{Maximum reference value (default=1.75)}
+\item{maxR}{Maximum reference value (default=1.75)}
 
 \item{contours}{Number of contour lines (default=7)}
 
-\item{n_lines}{Number of angular lines (default=10)}
+\item{nLines}{Number of angular lines (default=10)}
 
-\item{x_0}{Central reference point (default=1)}
+\item{x0}{Central reference point (default=1)}
 
-\item{ref_r_min}{Minimum reference circle radius (default=0.25)}
+\item{refRMin}{Minimum reference circle radius (default=0.25)}
 
-\item{ref_r_max}{Maximum reference circle radius (default=2)}
+\item{refRMax}{Maximum reference circle radius (default=2)}
 
-\item{ref_contours}{Number of reference circles (default=8)}
+\item{refContours}{Number of reference circles (default=8)}
 
 \item{full}{Display full circle (TRUE) or quadrant (FALSE) (default=FALSE)}
 }

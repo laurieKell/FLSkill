@@ -26,28 +26,28 @@ rocFn2<-function(obs, pred) {
 }
 
 #' @rdname skillScore
-#' @param CI Logical, calculate confidence intervals via bootstrap (default=FALSE)
-#' @param CI_level Confidence level for intervals (default=0.95)
-#' @param nBoot Number of bootstrap samples if CI=TRUE (default=1000)
+#' @param ci Logical, calculate confidence intervals via bootstrap (default=FALSE)
+#' @param ciLevel Confidence level for intervals (default=0.95)
+#' @param nBoot Number of bootstrap samples if ci=TRUE (default=1000)
 #' @param seed Random seed for bootstrap reproducibility (default=NULL)
 #' @details
-#' When CI=TRUE, bootstrap confidence intervals are calculated for AUC, TSS, TPR, and FPR.
+#' When ci=TRUE, bootstrap confidence intervals are calculated for AUC, TSS, TPR, and FPR.
 #' The bootstrap method resamples the data with replacement to estimate the sampling
 #' distribution of each metric. Confidence intervals are added as additional columns:
 #' AUC_CI_lower, AUC_CI_upper, TSS_CI_lower, TSS_CI_upper, TPR_CI_lower, TPR_CI_upper,
 #' FPR_CI_lower, FPR_CI_upper.
 #' @examples
 #' # Basic usage
-#' obs <- rlnorm(100, meanlog=log(1), sdlog=0.5)
-#' pred <- obs * exp(rnorm(100, sd=0.3))
+#' obs = rlnorm(100, meanlog=log(1), sdlog=0.5)
+#' pred = obs * exp(rnorm(100, sd=0.3))
 #' skillScore(obs, pred, reference=1)
 #' 
 #' # With confidence intervals
-#' skillScore(obs, pred, reference=1, CI=TRUE, nBoot=1000, seed=123)
+#' skillScore(obs, pred, reference=1, ci=TRUE, nBoot=1000, seed=123)
 #' @export
 setMethod("skillScore", signature(obs="numeric", pred="numeric"),
           function(obs, pred, reference = NULL, threshold = 1, 
-                   CI = FALSE, CI_level = 0.95, nBoot = 1000, seed = NULL) {
+                   ci = FALSE, ciLevel = 0.95, nBoot = 1000, seed = NULL) {
             rocs=rocFn2(obs > threshold, pred)
             if (is.null(reference)) {
               flag=which.max(rocs$TPR - rocs$FPR)
@@ -70,10 +70,10 @@ setMethod("skillScore", signature(obs="numeric", pred="numeric"),
             )
             
             # Add confidence intervals if requested
-            if (CI) {
+            if (ci) {
               ciResults = bootstrapSkillMetricsCI(obs, pred, threshold = threshold,
                                                   reference = reference, nBoot = nBoot,
-                                                  ciLevel = CI_level, seed = seed)
+                                                  ciLevel = ciLevel, seed = seed)
               
               # Add CI columns to result
               result$AUC_CI_lower = ciResults$ciLower[ciResults$metric == "AUC"]
@@ -90,27 +90,35 @@ setMethod("skillScore", signature(obs="numeric", pred="numeric"),
           })
 
 #' @rdname skillSummary
-#' @param CI Logical, calculate confidence intervals via bootstrap (default=FALSE)
-#' @param CI_level Confidence level for intervals (default=0.95)
-#' @param nBoot Number of bootstrap samples if CI=TRUE (default=1000)
+#' @param ci Logical, calculate confidence intervals via bootstrap (default=FALSE)
+#' @param ciLevel Confidence level for intervals (default=0.95)
+#' @param nBoot Number of bootstrap samples if ci=TRUE (default=1000)
 #' @param seed Random seed for bootstrap reproducibility (default=NULL)
 #' @details
-#' When CI=TRUE, bootstrap confidence intervals are calculated for AUC, TSS, TPR, and FPR.
+#' When ci=TRUE, bootstrap confidence intervals are calculated for AUC, TSS, TPR, and FPR.
 #' The bootstrap method resamples the data with replacement to estimate the sampling
 #' distribution of each metric. Confidence intervals are added as additional columns.
 #' @examples
 #' # Basic usage
-#' obs <- runif(100, 0.5, 1.5)
-#' pred <- obs * exp(rnorm(100, sd=0.2))
+#' obs = runif(100, 0.5, 1.5)
+#' pred = obs * exp(rnorm(100, sd=0.2))
 #' skillSummary(obs > 1, pred)
 #' 
 #' # With confidence intervals
-#' skillSummary(obs > 1, pred, CI=TRUE, n_boot=1000, seed=123)
+#' skillSummary(obs > 1, pred, ci=TRUE, nBoot=1000, seed=123)
 #' @export
 setMethod("skillSummary", signature(obs="numeric", pred="numeric"),
-          function(obs, pred, reference = NULL, CI = FALSE, 
-                   CI_level = 0.95, nBoot = 1000, seed = NULL) {
-            rocs=rocFn2(obs, pred)
+          function(obs, pred, reference = NULL, ci = FALSE, 
+                   ciLevel = 0.95, nBoot = 1000, seed = NULL) {
+            # skillSummary expects obs to be logical/binary for rocFn2
+            # If numeric, convert to logical using median threshold
+            if (!is.logical(obs)) {
+              threshold = median(obs, na.rm = TRUE)
+              obsLogical = obs > threshold
+            } else {
+              obsLogical = obs
+            }
+            rocs=rocFn2(obsLogical, pred)
             if (is.null(reference)) {
               flag=which.max(rocs$TPR - rocs$FPR)
             } else {
@@ -126,7 +134,7 @@ setMethod("skillSummary", signature(obs="numeric", pred="numeric"),
             )
             
             # Add confidence intervals if requested
-            if (CI) {
+            if (ci) {
               # For skillSummary, obs and pred are already binary/logical
               # We need to determine threshold - assume 1 if numeric, or use median
               if (is.logical(obs)) {
@@ -143,7 +151,54 @@ setMethod("skillSummary", signature(obs="numeric", pred="numeric"),
                                                   threshold = threshold,
                                                   reference = if(is.null(reference)) rocs$pred[flag] else reference,
                                                   nBoot = nBoot,
-                                                  ciLevel = CI_level, seed = seed)
+                                                  ciLevel = ciLevel, seed = seed)
+              
+              # Add CI columns to result
+              result$AUC_CI_lower = ciResults$ciLower[ciResults$metric == "AUC"]
+              result$AUC_CI_upper = ciResults$ciUpper[ciResults$metric == "AUC"]
+              result$TSS_CI_lower = ciResults$ciLower[ciResults$metric == "TSS"]
+              result$TSS_CI_upper = ciResults$ciUpper[ciResults$metric == "TSS"]
+              result$TPR_CI_lower = ciResults$ciLower[ciResults$metric == "TPR"]
+              result$TPR_CI_upper = ciResults$ciUpper[ciResults$metric == "TPR"]
+              result$FPR_CI_lower = ciResults$ciLower[ciResults$metric == "FPR"]
+              result$FPR_CI_upper = ciResults$ciUpper[ciResults$metric == "FPR"]
+            }
+            
+            return(result)
+          })
+
+#' @rdname skillSummary
+#' @export
+setMethod("skillSummary", signature(obs="logical", pred="numeric"),
+          function(obs, pred, reference = NULL, ci = FALSE, 
+                   ciLevel = 0.95, nBoot = 1000, seed = NULL) {
+            rocs=rocFn2(obs, pred)
+            if (is.null(reference)) {
+              flag=which.max(rocs$TPR - rocs$FPR)
+            } else {
+              flag=which.min(abs(rocs$pred - reference))
+            }
+            
+            result = data.frame(
+              AUC = auc_trapz(rocs$TPR, rocs$FPR),
+              TSS = rocs$TPR[flag] - rocs$FPR[flag],
+              ref = rocs$pred[flag],
+              TPR = rocs$TPR[flag],
+              FPR = rocs$FPR[flag]
+            )
+            
+            # Add confidence intervals if requested
+            if (ci) {
+              # For logical obs, use 0.5 as threshold
+              threshold = 0.5
+              obsNumeric = as.numeric(obs)
+              predNumeric = pred
+              
+              ciResults = bootstrapSkillMetricsCI(obsNumeric, predNumeric, 
+                                                  threshold = threshold,
+                                                  reference = if(is.null(reference)) rocs$pred[flag] else reference,
+                                                  nBoot = nBoot,
+                                                  ciLevel = ciLevel, seed = seed)
               
               # Add CI columns to result
               result$AUC_CI_lower = ciResults$ciLower[ciResults$metric == "AUC"]

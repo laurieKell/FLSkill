@@ -132,7 +132,7 @@ calculateSkillMetrics <- function(obs, pred, threshold = 1, reference = 1) {
 #' @return ggplot object with diagnostic visualization panels
 #' @examples
 #' set.seed(123)
-#' df=data.frame(Scenario = rep(1:2, each=100),
+#' df = data.frame(Scenario = rep(1:2, each=100),
 #'                  obs = rlnorm(200, meanlog=log(1), sdlog=0.5),
 #'                  pred = rlnorm(200, meanlog=log(1), sdlog=0.5))
 #' # Using column names with data.frame
@@ -467,14 +467,14 @@ skillPlot_old <- function(data, obs, hat, threshold = 1, reference = 1,
 
 #' @title Taylor Diagram Generator
 #' @description Creates Taylor diagrams for visual model skill assessment in stock assessments.
-#' @param min_R Minimum reference value (default=0.25)
-#' @param max_R Maximum reference value (default=1.75)
+#' @param minR Minimum reference value (default=0.25)
+#' @param maxR Maximum reference value (default=1.75)
 #' @param contours Number of contour lines (default=7)
-#' @param n_lines Number of angular lines (default=10)
-#' @param x_0 Central reference point (default=1)
-#' @param ref_r_min Minimum reference circle radius (default=0.25)
-#' @param ref_r_max Maximum reference circle radius (default=2)
-#' @param ref_contours Number of reference circles (default=8)
+#' @param nLines Number of angular lines (default=10)
+#' @param x0 Central reference point (default=1)
+#' @param refRMin Minimum reference circle radius (default=0.25)
+#' @param refRMax Maximum reference circle radius (default=2)
+#' @param refContours Number of reference circles (default=8)
 #' @param full Display full circle (TRUE) or quadrant (FALSE) (default=FALSE)
 #' @return ggplot object showing:
 #' \itemize{
@@ -486,29 +486,30 @@ skillPlot_old <- function(data, obs, hat, threshold = 1, reference = 1,
 #' taylorDiagram()
 #' @import ggplot2
 #' @export
-taylorDiagram<-function(min_R=0.25, max_R=1.75, contours=7, 
-                        n_lines=10, x_0=1, ref_r_min=0.25,
-                        ref_r_max=2, ref_contours=8, full=FALSE) {
+taylorDiagram <- function(minR = 0.25, maxR = 1.75, contours = 7, 
+                        nLines = 10, x0 = 1, refRMin = 0.25,
+                        refRMax = 2, refContours = 8, full = FALSE) {
   # Create base plot structure
-  p=ggplot()+
-    theme_minimal()+
-    coord_equal()+
-    scale_x_continuous(expand=c(0, 0))+
-    scale_y_continuous(expand=c(0, 0))+
-    labs(x="Standard Deviation", y="sigma")
+  p = ggplot() +
+    theme_minimal() +
+    coord_equal() +
+    scale_x_continuous(expand = c(0, 0)) +
+    scale_y_continuous(expand = c(0, 0)) +
+    labs(x = "Standard Deviation", y = "sigma")
   
   # Add correlation contours
-  angles=seq(0, ifelse(full, pi, pi/2), length.out=n_lines)
-  radii=seq(min_R, max_R, length.out=contours)
+  angles = seq(0, ifelse(full, pi, pi/2), length.out = nLines)
+  radii = seq(minR, maxR, length.out = contours)
   
   # Add reference circles
   for(r in radii) {
-    circle_data=data.frame(
-      x=r * cos(angles),
-      y=r * sin(angles)
+    circleData = data.frame(
+      x = r * cos(angles),
+      y = r * sin(angles)
     )
-    p=p + geom_path(data=circle_data, aes(x, y), 
-                    linetype="dashed", color="gray70")
+    p = p + geom_path(data = circleData, aes(x, y), 
+                    linetype = "dashed", color = "gray70")
   }
   
-  return(p)}
+  return(p)
+}

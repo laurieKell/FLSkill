@@ -26,42 +26,42 @@ setMethod("TSS", signature(TP="FLQuant", TN="FLQuant", FP="FLQuant", FN="FLQuant
 
 #' @rdname PN
 #' @export
-setMethod("PN", signature(obs="FLQuant", hat="FLQuant"),
-          function(obs, hat) {
+setMethod("PN", signature(obs="FLQuant", pred="FLQuant"),
+          function(obs, pred) {
             # Extract numeric values
-            obs_vals=as.numeric(obs)
-            hat_vals=as.numeric(hat)
+            obsVals = as.numeric(obs)
+            predVals = as.numeric(pred)
             
             # Calculate confusion matrix elements
-            tp=sum(obs_vals >= 0 & hat_vals >= 0)
-            tn=sum(obs_vals < 0 & hat_vals < 0)
-            fp=sum(obs_vals >= 0 & hat_vals < 0)
-            fn=sum(obs_vals < 0 & hat_vals >= 0)
+            tp = sum(obsVals >= 0 & predVals >= 0)
+            tn = sum(obsVals < 0 & predVals < 0)
+            fp = sum(obsVals >= 0 & predVals < 0)
+            fn = sum(obsVals < 0 & predVals >= 0)
             
-            return(data.frame(TP=tp, TN=tn, FP=fp, FN=fn))
+            return(data.frame(TP = tp, TN = tn, FP = fp, FN = fn))
           })
 
 #' @rdname rocFn
 #' @export
-setMethod("rocFn", signature(labels="FLQuant", ind="FLQuant"),
-          function(labels, ind) {
+setMethod("rocFn", signature(labels="FLQuant", scores="FLQuant"),
+          function(labels, scores) {
             # Extract numeric values
-            labels_vals=as.logical(labels)
-            ind_vals=as.numeric(ind)
+            labelsVals = as.logical(labels)
+            scoresVals = as.numeric(scores)
             
-            # Order by indicator values (descending)
-            ord=order(ind_vals, decreasing=TRUE)
-            labels_ordered=labels_vals[ord]
+            # Order by scores values (descending)
+            ord = order(scoresVals, decreasing = TRUE)
+            labelsOrdered = labelsVals[ord]
             
             # Calculate ROC coordinates
-            tpr=cumsum(labels_ordered) / sum(labels_ordered)
-            fpr=cumsum(!labels_ordered) / sum(!labels_ordered)
+            tpr = cumsum(labelsOrdered) / sum(labelsOrdered)
+            fpr = cumsum(!labelsOrdered) / sum(!labelsOrdered)
             
             return(data.frame(
               TPR = tpr,
               FPR = fpr,
-              labels = labels_ordered,
-              reference = sort(ind_vals, decreasing=TRUE)
+              labels = labelsOrdered,
+              reference = sort(scoresVals, decreasing = TRUE)
             ))
           })
 
@@ -70,30 +70,30 @@ setMethod("rocFn", signature(labels="FLQuant", ind="FLQuant"),
 setMethod("roc2", signature(state="FLQuant", ind="FLQuant"),
           function(state, ind, ...) {
             # Extract numeric values
-            state_vals=as.numeric(state)
-            ind_vals=as.numeric(ind)
+            stateVals = as.numeric(state)
+            indVals = as.numeric(ind)
             
             # Order by indicator values (descending)
-            ord=order(ind_vals, decreasing=TRUE)
-            state_ordered=state_vals[ord]
-            ind_ordered=ind_vals[ord]
-            label=state_ordered > 1
+            ord = order(indVals, decreasing = TRUE)
+            stateOrdered = stateVals[ord]
+            indOrdered = indVals[ord]
+            label = stateOrdered > 1
             
             # Calculate ROC statistics
-            tpr=cumsum(label) / sum(label)
-            fpr=cumsum(!label) / sum(!label)
+            tpr = cumsum(label) / sum(label)
+            fpr = cumsum(!label) / sum(!label)
             
-            tp=cumsum(label)
-            fp=cumsum(!label)
-            tn=sum(!label) - fp
-            fn=sum(label) - tp
+            tp = cumsum(label)
+            fp = cumsum(!label)
+            tn = sum(!label) - fp
+            fn = sum(label) - tp
             
-            tss=(tp / (tp + fn) - fp / (fp + tn))
+            tss = (tp / (tp + fn) - fp / (fp + tn))
             
             return(data.frame(
-              state = state_ordered,
+              state = stateOrdered,
               label = label,
-              ind = ind_ordered,
+              ind = indOrdered,
               TPR = tpr,
               FPR = fpr,
               TP = tp,
@@ -116,11 +116,11 @@ setMethod("roc2", signature(state="FLQuant", ind="FLQuant"),
 setMethod("skillScore", signature(obs="FLQuant", pred="FLQuant"),
           function(obs, pred, reference = NULL, threshold = 1) {
             # Extract numeric values
-            obs_vals=as.numeric(obs)
-            pred_vals=as.numeric(pred)
+            obsVals = as.numeric(obs)
+            predVals = as.numeric(pred)
             
             # Call the numeric method
-            skillScore(obs_vals, pred_vals, reference, threshold)
+            skillScore(obsVals, predVals, reference, threshold)
           })
 
 #' @title Skill Summary for FLQuant
@@ -132,11 +132,11 @@ setMethod("skillScore", signature(obs="FLQuant", pred="FLQuant"),
 setMethod("skillSummary", signature(obs="FLQuant", pred="FLQuant"),
           function(obs, pred) {
             # Extract numeric values
-            obs_vals=as.numeric(obs)
-            pred_vals=as.numeric(pred)
+            obsVals = as.numeric(obs)
+            predVals = as.numeric(pred)
             
             # Call the numeric method
-            skillSummary(obs_vals, pred_vals)
+            skillSummary(obsVals, predVals)
           })
 
 #' @title Trend Analysis for FLQuant
@@ -148,11 +148,11 @@ setMethod("skillSummary", signature(obs="FLQuant", pred="FLQuant"),
 setMethod("trend", signature(obs="FLQuant", pred="FLQuant"),
           function(obs, pred) {
             # Extract numeric values
-            obs_vals=as.numeric(obs)
-            pred_vals=as.numeric(pred)
+            obsVals = as.numeric(obs)
+            predVals = as.numeric(pred)
             
             # Call the numeric method
-            trend(obs_vals, pred_vals)
+            trend(obsVals, predVals)
           })
 
 #' @title State Classification for FLQuant
@@ -164,11 +164,11 @@ setMethod("trend", signature(obs="FLQuant", pred="FLQuant"),
 setMethod("state", signature(obs="FLQuant", pred="FLQuant"),
           function(obs, pred) {
             # Extract numeric values
-            obs_vals=as.numeric(obs)
-            pred_vals=as.numeric(pred)
+            obsVals = as.numeric(obs)
+            predVals = as.numeric(pred)
             
             # Call the numeric method
-            state(obs_vals, pred_vals)
+            state(obsVals, predVals)
           })
 
 #' @title Variability Comparison for FLQuant
@@ -180,11 +180,11 @@ setMethod("state", signature(obs="FLQuant", pred="FLQuant"),
 setMethod("variability", signature(obs="FLQuant", pred="FLQuant"),
           function(obs, pred) {
             # Extract numeric values
-            obs_vals=as.numeric(obs)
-            pred_vals=as.numeric(pred)
+            obsVals = as.numeric(obs)
+            predVals = as.numeric(pred)
             
             # Call the numeric method
-            variability(obs_vals, pred_vals)
+            variability(obsVals, predVals)
           })
 
 #' @title Time Series Comparison for FLQuant
@@ -196,43 +196,43 @@ setMethod("variability", signature(obs="FLQuant", pred="FLQuant"),
 setMethod("compareTS", signature(obs="FLQuant", pred="FLQuant"),
           function(obs, pred) {
             # Extract numeric values
-            obs_vals=as.numeric(obs)
-            pred_vals=as.numeric(pred)
+            obsVals = as.numeric(obs)
+            predVals = as.numeric(pred)
             
             # Call the numeric method
-            compareTS(obs_vals, pred_vals)
+            compareTS(obsVals, predVals)
           })
 
 #' @title Cross-Correlation Function for FLQuant
 #' @description Find optimal lag between FLQuant time series
 #' @param obs FLQuant object of observed time series
 #' @param pred FLQuant object of predicted time series
-#' @param lag.max Maximum lag to consider (default=5)
+#' @param lagMax Maximum lag to consider (default=5)
 #' @return Data.frame with optimal lag and ACF value
 #' @export
 setMethod("ccfFn", signature(obs="FLQuant", pred="FLQuant"),
-          function(obs, pred, lag.max = 5) {
+          function(obs, pred, lagMax = 5) {
             # Extract numeric values
-            obs_vals=as.numeric(obs)
-            pred_vals=as.numeric(pred)
+            obsVals = as.numeric(obs)
+            predVals = as.numeric(pred)
             
             # Call the numeric method
-            ccfFn(obs_vals, pred_vals, lag.max)
+            ccfFn(obsVals, predVals, lagMax)
           })
 
 #' @title Diagnostics for FLQuant
 #' @description Comprehensive diagnostic evaluation for FLQuant objects
 #' @param obs FLQuant object of observed values
 #' @param pred FLQuant object of predicted values
-#' @param ndemb Embedding dimension for permutation entropy (default=5)
+#' @param nDemb Embedding dimension for permutation entropy (default=5)
 #' @return Data.frame with diagnostic metrics
 #' @export
 setMethod("diagnostics", signature(obs="FLQuant", pred="FLQuant"),
-          function(obs, pred, ndemb = 5) {
+          function(obs, pred, nDemb = 5) {
             # Extract numeric values
-            obs_vals=as.numeric(obs)
-            pred_vals=as.numeric(pred)
+            obsVals = as.numeric(obs)
+            predVals = as.numeric(pred)
             
             # Call the numeric method
-            diagnostics(obs_vals, pred_vals, ndemb)
+            diagnostics(obsVals, predVals, nDemb)
           }) 

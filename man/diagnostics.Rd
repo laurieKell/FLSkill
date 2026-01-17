@@ -5,16 +5,16 @@
 \alias{diagnostics,numeric,numeric-method}
 \title{Diagnostics}
 \usage{
-diagnostics(obs, pred, ndemb = 5)
+diagnostics(obs, pred, nDemb = 5)
 
-\S4method{diagnostics}{numeric,numeric}(obs, pred, ndemb = 5)
+\S4method{diagnostics}{numeric,numeric}(obs, pred, nDemb = 5)
 }
 \arguments{
 \item{obs}{Numeric vector of observed values}
 
 \item{pred}{Numeric vector of predicted values}
 
-\item{ndemb}{Embedding dimension for permutation entropy}
+\item{nDemb}{Embedding dimension for permutation entropy}
 }
 \value{
 Data.frame with diagnostic metrics

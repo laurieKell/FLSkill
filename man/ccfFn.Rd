@@ -5,16 +5,16 @@
 \alias{ccfFn,numeric,numeric-method}
 \title{Cross-Correlation Function}
 \usage{
-ccfFn(obs, pred, lag.max = 5)
+ccfFn(obs, pred, lagMax = 5)
 
-\S4method{ccfFn}{numeric,numeric}(obs, pred, lag.max = 5)
+\S4method{ccfFn}{numeric,numeric}(obs, pred, lagMax = 5)
 }
 \arguments{
 \item{obs}{Numeric vector of observed time series}
 
 \item{pred}{Numeric vector of predicted time series}
 
-\item{lag.max}{Maximum lag to consider}
+\item{lagMax}{Maximum lag to consider}
 }
 \value{
 Data.frame with optimal lag and ACF value
