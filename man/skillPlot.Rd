@@ -84,7 +84,7 @@ obs  = rlnorm(200, meanlog=log(1), sdlog=0.5)
 df = data.frame(Scenario = rep(1:2, each=100),
                  obs  = obs,
                  pred = obs*c(rlnorm(100, meanlog=log(1), sdlog=0.2),
-                              rlnorm(100, meanlog=log(1), sdlog=0.5)*1.5)))
+                              rlnorm(100, meanlog=log(1), sdlog=0.5)*1.5))
                               
 # Using column names with data.frame
 skillPlot(obs="obs", pred="pred", data=df)
