@@ -4,27 +4,27 @@
 \alias{rocFn2}
 \title{Receiver Operating Characteristic (ROC) Curve Generator}
 \usage{
-rocFn2(obs, pred)
+rocFn2(response, predictor)
 }
 \arguments{
-\item{obs}{Logical vector of true stock statuses (TRUE=overfished)}
+\item{response}{Logical vector of true stock statuses (TRUE=overfished)}
 
-\item{pred}{Numeric vector of model predictions (e.g., B/BMSY ratios)}
+\item{predictor}{Numeric vector of model predictions (e.g., B/BMSY ratios)}
 }
 \value{
 Data.frame with columns:
 \itemize{
   \item TPR: True Positive Rate (sensitivity)
   \item FPR: False Positive Rate (1 - specificity)
-  \item obs: Ordered true labels
-  \item pred: Threshold values
+  \item response: Ordered true labels
+  \item predictor: Threshold values
 }
 }
 \description{
 Creates ROC curve data for stock status classification performance.
 }
 \examples{
-obs=runif(100, 0.5, 1.5) < 1
-pred=rnorm(100)
-roc_data=rocFn2(obs, pred)
+response=runif(100, 0.5, 1.5) < 1
+predictor=rnorm(100)
+roc_data=rocFn2(response, predictor)
 }

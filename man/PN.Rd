@@ -6,16 +6,16 @@
 \alias{PN,FLQuant,FLQuant-method}
 \title{Confusion Matrix Statistics}
 \usage{
-PN(obs, pred)
+PN(response, predictor)
 
-\S4method{PN}{numeric,numeric}(obs, pred)
+\S4method{PN}{numeric,numeric}(response, predictor)
 
-\S4method{PN}{FLQuant,FLQuant}(obs, pred)
+\S4method{PN}{FLQuant,FLQuant}(response, predictor)
 }
 \arguments{
-\item{obs}{Numeric vector of observed values}
+\item{response}{Numeric vector of observed values}
 
-\item{pred}{Numeric vector of predicted values}
+\item{predictor}{Numeric vector of predicted values}
 }
 \value{
 A data frame containing TP, TN, FP, and FN counts
@@ -26,9 +26,9 @@ and False Negative (FN) counts from predicted and actual values
 }
 \examples{
 \dontrun{
-obs = c(1, -1, 1, -1)
-pred = c(1, -1, -1, 1)
-confusionStats = PN(obs, pred)
+response = c(1, -1, 1, -1)
+predictor = c(1, -1, -1, 1)
+confusionStats = PN(response, predictor)
 }
 
 }

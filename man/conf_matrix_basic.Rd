@@ -4,12 +4,12 @@
 \alias{conf_matrix_basic}
 \title{Basic Confusion Matrix}
 \usage{
-conf_matrix_basic(obs, pred)
+conf_matrix_basic(response, predictor)
 }
 \arguments{
-\item{obs}{Logical or binary vector of observed values}
+\item{response}{Logical or binary vector of observed values}
 
-\item{pred}{Logical or binary vector of predicted values}
+\item{predictor}{Logical or binary vector of predicted values}
 }
 \value{
 Data.frame with TP, TN, FP, FN

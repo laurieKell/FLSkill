@@ -6,11 +6,11 @@
 \alias{skillPlot_old}
 \title{Skill Plot}
 \usage{
-skillPlot(obs, pred, ...)
+skillPlot(response, predictor, ...)
 
 \S4method{skillPlot}{ANY}(
-  obs,
-  pred,
+  response,
+  predictor,
   data = NULL,
   group = NULL,
   threshold = 1,
@@ -26,25 +26,25 @@ skillPlot(obs, pred, ...)
 
 skillPlot_old(
   data,
-  obs,
+  response,
   hat,
   threshold = 1,
   reference = 1,
   xLabel = "",
   limits = c(0, 5),
-  labels = c(obs, hat),
+  labels = c(response, hat),
   group = NULL,
   ...
 )
 }
 \arguments{
-\item{obs}{Character name of column with true stock status, or numeric vector}
+\item{response}{Character name of column with true stock status, or numeric vector}
 
-\item{pred}{Character name of column with predicted status, or numeric vector}
+\item{predictor}{Character name of column with predicted status, or numeric vector}
 
 \item{...}{Additional arguments passed to methods (data, group, threshold, reference, panels, etc.)}
 
-\item{data}{Data.frame containing assessment results (optional if obs/pred are vectors)}
+\item{data}{Data.frame containing assessment results (optional if response/predictor are vectors)}
 
 \item{group}{Character name of grouping column (e.g., "Scenario"). If NULL, automatically uses "Scenario" if present, otherwise no grouping.}
 
@@ -66,7 +66,7 @@ skillPlot_old(
 
 \item{themeStyle}{Character, ggplot2 theme style: "bw", "minimal", "classic" (default="bw")}
 
-\item{hat}{Character name of column with predicted status (old parameter name, use 'pred' in new signature)}
+\item{hat}{Character name of column with predicted status (old parameter name, use 'predictor' in new signature)}
 }
 \value{
 ggplot object with diagnostic visualization panels
@@ -80,22 +80,22 @@ customizable visualization panels (density, scatter, ROC curves).
 }
 \examples{
 set.seed(123)
-obs  = rlnorm(200, meanlog=log(1), sdlog=0.5)
+response  = rlnorm(200, meanlog=log(1), sdlog=0.5)
 df = data.frame(Scenario = rep(1:2, each=100),
-                 obs  = obs,
-                 pred = obs*c(rlnorm(100, meanlog=log(1), sdlog=0.2),
+                 response  = response,
+                 predictor = response*c(rlnorm(100, meanlog=log(1), sdlog=0.2),
                               rlnorm(100, meanlog=log(1), sdlog=0.5)*1.5))
                               
 # Using column names with data.frame
-skillPlot(obs="obs", pred="pred", data=df)
+skillPlot(response="response", predictor="predictor", data=df)
 
 # Using numeric vectors directly
-skillPlot(obs=df$obs, pred=df$pred)
+skillPlot(response=df$response, predictor=df$predictor)
 
 # Custom panels
-skillPlot(obs="obs", pred="pred", data=df, panels=c("scatter", "roc"))
+skillPlot(response="response", predictor="predictor", data=df, panels=c("scatter", "roc"))
 
 # Custom grouping
-skillPlot(obs="obs", pred="pred", data=df, group="Scenario")
+skillPlot(response="response", predictor="predictor", data=df, group="Scenario")
 }
 \keyword{internal}

@@ -4,12 +4,12 @@
 \alias{ccfFn,FLQuant,FLQuant-method}
 \title{Cross-Correlation Function for FLQuant}
 \usage{
-\S4method{ccfFn}{FLQuant,FLQuant}(obs, pred, lagMax = 5)
+\S4method{ccfFn}{FLQuant,FLQuant}(response, predictor, lagMax = 5)
 }
 \arguments{
-\item{obs}{FLQuant object of observed time series}
+\item{response}{FLQuant object of observed time series}
 
-\item{pred}{FLQuant object of predicted time series}
+\item{predictor}{FLQuant object of predicted time series}
 
 \item{lagMax}{Maximum lag to consider (default=5)}
 }

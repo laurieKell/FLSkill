@@ -2,14 +2,14 @@
 % Please edit documentation in R/generics.R, R/classification.R
 \name{skillSummary}
 \alias{skillSummary}
-\alias{skillSummary,numeric,numeric-method}
 \alias{skillSummary,logical,numeric-method}
 \title{Skill Summary}
 \usage{
 skillSummary(
-  obs,
-  pred,
+  response,
+  predictor,
   reference = NULL,
+  threshold = 1,
   ci = FALSE,
   ciLevel = 0.95,
   nBoot = 1000,
@@ -17,20 +17,11 @@ skillSummary(
   ...
 )
 
-\S4method{skillSummary}{numeric,numeric}(
-  obs,
-  pred,
-  reference = NULL,
-  ci = FALSE,
-  ciLevel = 0.95,
-  nBoot = 1000,
-  seed = NULL
-)
-
 \S4method{skillSummary}{logical,numeric}(
-  obs,
-  pred,
+  response,
+  predictor,
   reference = NULL,
+  threshold = null,
   ci = FALSE,
   ciLevel = 0.95,
   nBoot = 1000,
@@ -38,9 +29,9 @@ skillSummary(
 )
 }
 \arguments{
-\item{obs}{Numeric vector of observed values}
+\item{response}{Numeric vector of observed values}
 
-\item{pred}{Numeric vector of predicted values}
+\item{predictor}{Numeric vector of predicted values}
 
 \item{reference}{Reference value for classification (default=NULL, uses optimal)}
 
@@ -67,10 +58,10 @@ distribution of each metric. Confidence intervals are added as additional column
 }
 \examples{
 # Basic usage
-obs = runif(100, 0.5, 1.5)
-pred = obs * exp(rnorm(100, sd=0.2))
-skillSummary(obs > 1, pred)
+response = runif(100, 0.5, 1.5)
+predictor = response * exp(rnorm(100, sd=0.2))
+skillSummary(response > 1, predictor)
 
 # With confidence intervals
-skillSummary(obs > 1, pred, ci=TRUE, nBoot=1000, seed=123)
+skillSummary(response > 1, predictor, ci=TRUE, nBoot=1000, seed=123)
 }

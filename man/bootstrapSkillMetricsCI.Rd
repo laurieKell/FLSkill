@@ -5,8 +5,8 @@
 \title{Bootstrap Confidence Intervals for Skill Metrics}
 \usage{
 bootstrapSkillMetricsCI(
-  obs,
-  pred,
+  response,
+  predictor,
   threshold = 1,
   reference = 1,
   nBoot = 1000,
@@ -15,9 +15,9 @@ bootstrapSkillMetricsCI(
 )
 }
 \arguments{
-\item{obs}{Numeric vector of observed values}
+\item{response}{Numeric vector of observed values}
 
-\item{pred}{Numeric vector of predicted values}
+\item{predictor}{Numeric vector of predicted values}
 
 \item{threshold}{Threshold for classification (default=1)}
 

@@ -4,12 +4,12 @@
 \alias{compareTS,FLQuant,FLQuant-method}
 \title{Time Series Comparison for FLQuant}
 \usage{
-\S4method{compareTS}{FLQuant,FLQuant}(obs, pred)
+\S4method{compareTS}{FLQuant,FLQuant}(response, predictor)
 }
 \arguments{
-\item{obs}{FLQuant object of observed time series}
+\item{response}{FLQuant object of observed time series}
 
-\item{pred}{FLQuant object of predicted time series}
+\item{predictor}{FLQuant object of predicted time series}
 }
 \value{
 Data.frame with similarity metrics

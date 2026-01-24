@@ -4,12 +4,12 @@
 \alias{skillScore,FLQuant,FLQuant-method}
 \title{Skill Score for FLQuant}
 \usage{
-\S4method{skillScore}{FLQuant,FLQuant}(obs, pred, reference = NULL, threshold = 1)
+\S4method{skillScore}{FLQuant,FLQuant}(response, predictor, reference = NULL, threshold = 1)
 }
 \arguments{
-\item{obs}{FLQuant object of observed values}
+\item{response}{FLQuant object of observed values}
 
-\item{pred}{FLQuant object of predicted values}
+\item{predictor}{FLQuant object of predicted values}
 
 \item{reference}{Reference value for classification (default=1)}
 

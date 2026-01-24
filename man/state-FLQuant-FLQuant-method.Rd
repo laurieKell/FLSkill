@@ -4,12 +4,12 @@
 \alias{state,FLQuant,FLQuant-method}
 \title{State Classification for FLQuant}
 \usage{
-\S4method{state}{FLQuant,FLQuant}(obs, pred)
+\S4method{state}{FLQuant,FLQuant}(response, predictor)
 }
 \arguments{
-\item{obs}{FLQuant object of observed stock status}
+\item{response}{FLQuant object of observed stock status}
 
-\item{pred}{FLQuant object of predicted stock status}
+\item{predictor}{FLQuant object of predicted stock status}
 }
 \value{
 Data.frame with classification metrics

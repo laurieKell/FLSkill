@@ -4,12 +4,12 @@
 \alias{diagnostics,FLQuant,FLQuant-method}
 \title{Diagnostics for FLQuant}
 \usage{
-\S4method{diagnostics}{FLQuant,FLQuant}(obs, pred, nDemb = 5)
+\S4method{diagnostics}{FLQuant,FLQuant}(response, predictor, nDemb = 5)
 }
 \arguments{
-\item{obs}{FLQuant object of observed values}
+\item{response}{FLQuant object of observed values}
 
-\item{pred}{FLQuant object of predicted values}
+\item{predictor}{FLQuant object of predicted values}
 
 \item{nDemb}{Embedding dimension for permutation entropy (default=5)}
 }

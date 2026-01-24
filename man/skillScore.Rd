@@ -2,12 +2,12 @@
 % Please edit documentation in R/generics.R, R/classification.R
 \name{skillScore}
 \alias{skillScore}
-\alias{skillScore,numeric,numeric-method}
+\alias{skillScore,logical,numeric-method}
 \title{Skill Score Calculation}
 \usage{
 skillScore(
-  obs,
-  pred,
+  response,
+  predictor,
   reference = NULL,
   threshold = 1,
   ci = FALSE,
@@ -16,11 +16,11 @@ skillScore(
   seed = NULL
 )
 
-\S4method{skillScore}{numeric,numeric}(
-  obs,
-  pred,
+\S4method{skillScore}{logical,numeric}(
+  response,
+  predictor,
   reference = NULL,
-  threshold = 1,
+  threshold = NULL,
   ci = FALSE,
   ciLevel = 0.95,
   nBoot = 1000,
@@ -28,9 +28,9 @@ skillScore(
 )
 }
 \arguments{
-\item{obs}{Numeric vector of observed values}
+\item{response}{Numeric vector of observed values}
 
-\item{pred}{Numeric vector of predicted values}
+\item{predictor}{Numeric vector of predicted values}
 
 \item{reference}{Reference value for classification}
 
@@ -59,10 +59,10 @@ FPR_CI_lower, FPR_CI_upper.
 }
 \examples{
 # Basic usage
-obs = rlnorm(100, meanlog=log(1), sdlog=0.5)
-pred = obs * exp(rnorm(100, sd=0.3))
-skillScore(obs, pred, reference=1)
+response = rlnorm(100, meanlog=log(1), sdlog=0.5)
+predictor = response * exp(rnorm(100, sd=0.3))
+skillScore(response, predictor, reference=1)
 
 # With confidence intervals
-skillScore(obs, pred, reference=1, ci=TRUE, nBoot=1000, seed=123)
+skillScore(response, predictor, reference=1, ci=TRUE, nBoot=1000, seed=123)
 }

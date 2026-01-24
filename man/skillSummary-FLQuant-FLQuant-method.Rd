@@ -4,12 +4,12 @@
 \alias{skillSummary,FLQuant,FLQuant-method}
 \title{Skill Summary for FLQuant}
 \usage{
-\S4method{skillSummary}{FLQuant,FLQuant}(obs, pred)
+\S4method{skillSummary}{FLQuant,FLQuant}(response, predictor)
 }
 \arguments{
-\item{obs}{FLQuant object of observed values}
+\item{response}{FLQuant object of observed values}
 
-\item{pred}{FLQuant object of predicted values}
+\item{predictor}{FLQuant object of predicted values}
 }
 \value{
 Data.frame with comprehensive skill metrics

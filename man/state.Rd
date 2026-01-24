@@ -5,14 +5,14 @@
 \alias{state,numeric,numeric-method}
 \title{State Classification}
 \usage{
-state(obs, pred)
+state(response, predictor)
 
-\S4method{state}{numeric,numeric}(obs, pred)
+\S4method{state}{numeric,numeric}(response, predictor)
 }
 \arguments{
-\item{obs}{Numeric vector of observed stock status}
+\item{response}{Numeric vector of observed stock status}
 
-\item{pred}{Numeric vector of predicted stock status}
+\item{predictor}{Numeric vector of predicted stock status}
 }
 \value{
 Data.frame with classification metrics

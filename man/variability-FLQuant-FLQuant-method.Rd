@@ -4,12 +4,12 @@
 \alias{variability,FLQuant,FLQuant-method}
 \title{Variability Comparison for FLQuant}
 \usage{
-\S4method{variability}{FLQuant,FLQuant}(obs, pred)
+\S4method{variability}{FLQuant,FLQuant}(response, predictor)
 }
 \arguments{
-\item{obs}{FLQuant object of observed values}
+\item{response}{FLQuant object of observed values}
 
-\item{pred}{FLQuant object of predicted values}
+\item{predictor}{FLQuant object of predicted values}
 }
 \value{
 Data.frame with variability ratios

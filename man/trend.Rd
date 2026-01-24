@@ -5,14 +5,14 @@
 \alias{trend,numeric,numeric-method}
 \title{Trend Analysis}
 \usage{
-trend(obs, pred)
+trend(response, predictor)
 
-\S4method{trend}{numeric,numeric}(obs, pred)
+\S4method{trend}{numeric,numeric}(response, predictor)
 }
 \arguments{
-\item{obs}{Numeric vector of observed time series}
+\item{response}{Numeric vector of observed time series}
 
-\item{pred}{Numeric vector of predicted time series}
+\item{predictor}{Numeric vector of predicted time series}
 }
 \value{
 Data.frame with trend metrics

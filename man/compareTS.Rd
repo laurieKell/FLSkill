@@ -5,14 +5,14 @@
 \alias{compareTS,numeric,numeric-method}
 \title{Time Series Comparison}
 \usage{
-compareTS(obs, pred)
+compareTS(response, predictor)
 
-\S4method{compareTS}{numeric,numeric}(obs, pred)
+\S4method{compareTS}{numeric,numeric}(response, predictor)
 }
 \arguments{
-\item{obs}{Numeric vector of observed time series}
+\item{response}{Numeric vector of observed time series}
 
-\item{pred}{Numeric vector of predicted time series}
+\item{predictor}{Numeric vector of predicted time series}
 }
 \value{
 Data.frame with similarity metrics

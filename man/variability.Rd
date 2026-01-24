@@ -5,14 +5,14 @@
 \alias{variability,numeric,numeric-method}
 \title{Variability Comparison}
 \usage{
-variability(obs, pred)
+variability(response, predictor)
 
-\S4method{variability}{numeric,numeric}(obs, pred)
+\S4method{variability}{numeric,numeric}(response, predictor)
 }
 \arguments{
-\item{obs}{Numeric vector of observed values}
+\item{response}{Numeric vector of observed values}
 
-\item{pred}{Numeric vector of predicted values}
+\item{predictor}{Numeric vector of predicted values}
 }
 \value{
 Data.frame with variability ratios

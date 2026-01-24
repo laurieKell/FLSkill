@@ -4,12 +4,12 @@
 \alias{trend,FLQuant,FLQuant-method}
 \title{Trend Analysis for FLQuant}
 \usage{
-\S4method{trend}{FLQuant,FLQuant}(obs, pred)
+\S4method{trend}{FLQuant,FLQuant}(response, predictor)
 }
 \arguments{
-\item{obs}{FLQuant object of observed time series}
+\item{response}{FLQuant object of observed time series}
 
-\item{pred}{FLQuant object of predicted time series}
+\item{predictor}{FLQuant object of predicted time series}
 }
 \value{
 Data.frame with trend metrics

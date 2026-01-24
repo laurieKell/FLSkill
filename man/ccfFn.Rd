@@ -5,14 +5,14 @@
 \alias{ccfFn,numeric,numeric-method}
 \title{Cross-Correlation Function}
 \usage{
-ccfFn(obs, pred, lagMax = 5)
+ccfFn(response, predictor, lagMax = 5)
 
-\S4method{ccfFn}{numeric,numeric}(obs, pred, lagMax = 5)
+\S4method{ccfFn}{numeric,numeric}(response, predictor, lagMax = 5)
 }
 \arguments{
-\item{obs}{Numeric vector of observed time series}
+\item{response}{Numeric vector of observed time series}
 
-\item{pred}{Numeric vector of predicted time series}
+\item{predictor}{Numeric vector of predicted time series}
 
 \item{lagMax}{Maximum lag to consider}
 }
