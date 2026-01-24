@@ -26,17 +26,17 @@ setMethod("TSS", signature(TP="FLQuant", TN="FLQuant", FP="FLQuant", FN="FLQuant
 
 #' @rdname PN
 #' @export
-setMethod("PN", signature(obs="FLQuant", pred="FLQuant"),
-          function(obs, pred) {
+setMethod("PN", signature(response="FLQuant", predictor="FLQuant"),
+          function(response, predictor) {
             # Extract numeric values
-            obsVals = as.numeric(obs)
-            predVals = as.numeric(pred)
+            responseVals = as.numeric(response)
+            predictorVals = as.numeric(predictor)
             
             # Calculate confusion matrix elements
-            tp = sum(obsVals >= 0 & predVals >= 0)
-            tn = sum(obsVals < 0 & predVals < 0)
-            fp = sum(obsVals >= 0 & predVals < 0)
-            fn = sum(obsVals < 0 & predVals >= 0)
+            tp = sum(responseVals >= 0 & predictorVals >= 0)
+            tn = sum(responseVals < 0 & predictorVals < 0)
+            fp = sum(responseVals >= 0 & predictorVals < 0)
+            fn = sum(responseVals < 0 & predictorVals >= 0)
             
             return(data.frame(TP = tp, TN = tn, FP = fp, FN = fn))
           })
@@ -107,132 +107,132 @@ setMethod("roc2", signature(state="FLQuant", ind="FLQuant"),
 
 #' @title Skill Score for FLQuant
 #' @description Calculate skill scores for FLQuant objects
-#' @param obs FLQuant object of observed values
-#' @param pred FLQuant object of predicted values
+#' @param response FLQuant object of observed values
+#' @param predictor FLQuant object of predicted values
 #' @param reference Reference value for classification (default=1)
 #' @param threshold Threshold for classification (default=1)
 #' @return Data.frame with skill metrics
 #' @export
-setMethod("skillScore", signature(obs="FLQuant", pred="FLQuant"),
-          function(obs, pred, reference = NULL, threshold = 1) {
+setMethod("skillScore", signature(response="FLQuant", predictor="FLQuant"),
+          function(response, predictor, reference = NULL, threshold = 1) {
             # Extract numeric values
-            obsVals = as.numeric(obs)
-            predVals = as.numeric(pred)
+            responseVals = as.numeric(response)
+            predictorVals = as.numeric(predictor)
             
             # Call the numeric method
-            skillScore(obsVals, predVals, reference, threshold)
+            skillScore(responseVals, predictorVals, reference, threshold)
           })
 
 #' @title Skill Summary for FLQuant
 #' @description Calculate comprehensive skill summary for FLQuant objects
-#' @param obs FLQuant object of observed values
-#' @param pred FLQuant object of predicted values
+#' @param response FLQuant object of observed values
+#' @param predictor FLQuant object of predicted values
 #' @return Data.frame with comprehensive skill metrics
 #' @export
-setMethod("skillSummary", signature(obs="FLQuant", pred="FLQuant"),
-          function(obs, pred) {
+setMethod("skillSummary", signature(response="FLQuant", predictor="FLQuant"),
+          function(response, predictor) {
             # Extract numeric values
-            obsVals = as.numeric(obs)
-            predVals = as.numeric(pred)
+            responseVals = as.numeric(response)
+            predictorVals = as.numeric(predictor)
             
             # Call the numeric method
-            skillSummary(obsVals, predVals)
+            skillSummary(responseVals, predictorVals)
           })
 
 #' @title Trend Analysis for FLQuant
 #' @description Calculate trend agreement metrics for FLQuant objects
-#' @param obs FLQuant object of observed time series
-#' @param pred FLQuant object of predicted time series
+#' @param response FLQuant object of observed time series
+#' @param predictor FLQuant object of predicted time series
 #' @return Data.frame with trend metrics
 #' @export
-setMethod("trend", signature(obs="FLQuant", pred="FLQuant"),
-          function(obs, pred) {
+setMethod("trend", signature(response="FLQuant", predictor="FLQuant"),
+          function(response, predictor) {
             # Extract numeric values
-            obsVals = as.numeric(obs)
-            predVals = as.numeric(pred)
+            responseVals = as.numeric(response)
+            predictorVals = as.numeric(predictor)
             
             # Call the numeric method
-            trend(obsVals, predVals)
+            trend(responseVals, predictorVals)
           })
 
 #' @title State Classification for FLQuant
 #' @description Evaluate stock status classification for FLQuant objects
-#' @param obs FLQuant object of observed stock status
-#' @param pred FLQuant object of predicted stock status
+#' @param response FLQuant object of observed stock status
+#' @param predictor FLQuant object of predicted stock status
 #' @return Data.frame with classification metrics
 #' @export
-setMethod("state", signature(obs="FLQuant", pred="FLQuant"),
-          function(obs, pred) {
+setMethod("state", signature(response="FLQuant", predictor="FLQuant"),
+          function(response, predictor) {
             # Extract numeric values
-            obsVals = as.numeric(obs)
-            predVals = as.numeric(pred)
+            responseVals = as.numeric(response)
+            predictorVals = as.numeric(predictor)
             
             # Call the numeric method
-            state(obsVals, predVals)
+            state(responseVals, predictorVals)
           })
 
 #' @title Variability Comparison for FLQuant
 #' @description Compare variability characteristics for FLQuant objects
-#' @param obs FLQuant object of observed values
-#' @param pred FLQuant object of predicted values
+#' @param response FLQuant object of observed values
+#' @param predictor FLQuant object of predicted values
 #' @return Data.frame with variability ratios
 #' @export
-setMethod("variability", signature(obs="FLQuant", pred="FLQuant"),
-          function(obs, pred) {
+setMethod("variability", signature(response="FLQuant", predictor="FLQuant"),
+          function(response, predictor) {
             # Extract numeric values
-            obsVals = as.numeric(obs)
-            predVals = as.numeric(pred)
+            responseVals = as.numeric(response)
+            predictorVals = as.numeric(predictor)
             
             # Call the numeric method
-            variability(obsVals, predVals)
+            variability(responseVals, predictorVals)
           })
 
 #' @title Time Series Comparison for FLQuant
 #' @description Calculate similarity measures for FLQuant time series
-#' @param obs FLQuant object of observed time series
-#' @param pred FLQuant object of predicted time series
+#' @param response FLQuant object of observed time series
+#' @param predictor FLQuant object of predicted time series
 #' @return Data.frame with similarity metrics
 #' @export
-setMethod("compareTS", signature(obs="FLQuant", pred="FLQuant"),
-          function(obs, pred) {
+setMethod("compareTS", signature(response="FLQuant", predictor="FLQuant"),
+          function(response, predictor) {
             # Extract numeric values
-            obsVals = as.numeric(obs)
-            predVals = as.numeric(pred)
+            responseVals = as.numeric(response)
+            predictorVals = as.numeric(predictor)
             
             # Call the numeric method
-            compareTS(obsVals, predVals)
+            compareTS(responseVals, predictorVals)
           })
 
 #' @title Cross-Correlation Function for FLQuant
 #' @description Find optimal lag between FLQuant time series
-#' @param obs FLQuant object of observed time series
-#' @param pred FLQuant object of predicted time series
+#' @param response FLQuant object of observed time series
+#' @param predictor FLQuant object of predicted time series
 #' @param lagMax Maximum lag to consider (default=5)
 #' @return Data.frame with optimal lag and ACF value
 #' @export
-setMethod("ccfFn", signature(obs="FLQuant", pred="FLQuant"),
-          function(obs, pred, lagMax = 5) {
+setMethod("ccfFn", signature(response="FLQuant", predictor="FLQuant"),
+          function(response, predictor, lagMax = 5) {
             # Extract numeric values
-            obsVals = as.numeric(obs)
-            predVals = as.numeric(pred)
+            responseVals = as.numeric(response)
+            predictorVals = as.numeric(predictor)
             
             # Call the numeric method
-            ccfFn(obsVals, predVals, lagMax)
+            ccfFn(responseVals, predictorVals, lagMax)
           })
 
 #' @title Diagnostics for FLQuant
 #' @description Comprehensive diagnostic evaluation for FLQuant objects
-#' @param obs FLQuant object of observed values
-#' @param pred FLQuant object of predicted values
+#' @param response FLQuant object of observed values
+#' @param predictor FLQuant object of predicted values
 #' @param nDemb Embedding dimension for permutation entropy (default=5)
 #' @return Data.frame with diagnostic metrics
 #' @export
-setMethod("diagnostics", signature(obs="FLQuant", pred="FLQuant"),
-          function(obs, pred, nDemb = 5) {
+setMethod("diagnostics", signature(response="FLQuant", predictor="FLQuant"),
+          function(response, predictor, nDemb = 5) {
             # Extract numeric values
-            obsVals = as.numeric(obs)
-            predVals = as.numeric(pred)
+            responseVals = as.numeric(response)
+            predictorVals = as.numeric(predictor)
             
             # Call the numeric method
-            diagnostics(obsVals, predVals, nDemb)
+            diagnostics(responseVals, predictorVals, nDemb)
           }) 

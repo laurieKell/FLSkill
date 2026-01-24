@@ -27,20 +27,20 @@ setGeneric("TSS", function(TP, TN, FP, FN) standardGeneric("TSS"))
 #' @description Calculates True Positive (TP), True Negative (TN), False Positive (FP), 
 #' and False Negative (FN) counts from predicted and actual values
 #'
-#' @param obs Numeric vector of observed values
-#' @param pred Numeric vector of predicted values
+#' @param response Numeric vector of observed values
+#' @param predictor Numeric vector of predicted values
 #'
 #' @return A data frame containing TP, TN, FP, and FN counts
 #'
 #' @examples
 #' \dontrun{
-#' obs = c(1, -1, 1, -1)
-#' pred = c(1, -1, -1, 1)
-#' confusionStats = PN(obs, pred)
+#' response = c(1, -1, 1, -1)
+#' predictor = c(1, -1, -1, 1)
+#' confusionStats = PN(response, predictor)
 #' }
 #'
 #' @export
-setGeneric("PN", function(obs, pred) standardGeneric("PN"))
+setGeneric("PN", function(response, predictor) standardGeneric("PN"))
 
 
 #' @title ROC Curve Coordinates
@@ -97,8 +97,8 @@ setGeneric("roc2", function(state, ind, ...) {
 
 #' @title Skill Score Calculation
 #' @description Calculate prediction skill scores for fishery stock assessment models
-#' @param obs Numeric vector of observed values
-#' @param pred Numeric vector of predicted values
+#' @param response Numeric vector of observed values
+#' @param predictor Numeric vector of predicted values
 #' @param reference Reference value for classification
 #' @param threshold Threshold for classification
 #' @param ci Logical, calculate confidence intervals via bootstrap (default=FALSE)
@@ -107,15 +107,15 @@ setGeneric("roc2", function(state, ind, ...) {
 #' @param seed Random seed for bootstrap reproducibility (default=NULL)
 #' @return Data.frame with skill metrics and optional confidence intervals
 #' @export
-setGeneric("skillScore", function(obs, pred, reference = NULL, threshold = 1,
+setGeneric("skillScore", function(response, predictor, reference = NULL, threshold = 1,
                                    ci = FALSE, ciLevel = 0.95, nBoot = 1000, seed = NULL) {
   standardGeneric("skillScore")
 })
 
 #' @title Skill Summary
 #' @description Comprehensive performance metrics for fishery management procedures
-#' @param obs Numeric vector of observed values
-#' @param pred Numeric vector of predicted values
+#' @param response Numeric vector of observed values
+#' @param predictor Numeric vector of predicted values
 #' @param reference Reference value for classification (default=NULL, uses optimal)
 #' @param ci Logical, calculate confidence intervals via bootstrap (default=FALSE)
 #' @param ciLevel Confidence level for intervals (default=0.95)
@@ -124,70 +124,70 @@ setGeneric("skillScore", function(obs, pred, reference = NULL, threshold = 1,
 #' @param ... Additional arguments passed to methods
 #' @return Data.frame with comprehensive skill metrics and optional confidence intervals
 #' @export
-setGeneric("skillSummary", function(obs, pred, reference = NULL, threshold = 1, ci = FALSE,
+setGeneric("skillSummary", function(response, predictor, reference = NULL, threshold = 1, ci = FALSE,
                                      ciLevel = 0.95, nBoot = 1000, seed = NULL, ...) {
   standardGeneric("skillSummary")
 })
 
 #' @title Trend Analysis
 #' @description Calculate trend agreement metrics between time series
-#' @param obs Numeric vector of observed time series
-#' @param pred Numeric vector of predicted time series
+#' @param response Numeric vector of observed time series
+#' @param predictor Numeric vector of predicted time series
 #' @return Data.frame with trend metrics
 #' @export
-setGeneric("trend", function(obs, pred) {
+setGeneric("trend", function(response, predictor) {
   standardGeneric("trend")
 })
 
 #' @title State Classification
 #' @description Evaluate stock status classification performance
-#' @param obs Numeric vector of observed stock status
-#' @param pred Numeric vector of predicted stock status
+#' @param response Numeric vector of observed stock status
+#' @param predictor Numeric vector of predicted stock status
 #' @return Data.frame with classification metrics
 #' @export
-setGeneric("state", function(obs, pred) {
+setGeneric("state", function(response, predictor) {
   standardGeneric("state")
 })
 
 #' @title Variability Comparison
 #' @description Compare variability characteristics between time series
-#' @param obs Numeric vector of observed values
-#' @param pred Numeric vector of predicted values
+#' @param response Numeric vector of observed values
+#' @param predictor Numeric vector of predicted values
 #' @return Data.frame with variability ratios
 #' @export
-setGeneric("variability", function(obs, pred) {
+setGeneric("variability", function(response, predictor) {
   standardGeneric("variability")
 })
 
 #' @title Time Series Comparison
 #' @description Calculate similarity measures between time series
-#' @param obs Numeric vector of observed time series
-#' @param pred Numeric vector of predicted time series
+#' @param response Numeric vector of observed time series
+#' @param predictor Numeric vector of predicted time series
 #' @return Data.frame with similarity metrics
 #' @export
-setGeneric("compareTS", function(obs, pred) {
+setGeneric("compareTS", function(response, predictor) {
   standardGeneric("compareTS")
 })
 
 #' @title Cross-Correlation Function
 #' @description Find optimal lag between time series
-#' @param obs Numeric vector of observed time series
-#' @param pred Numeric vector of predicted time series
+#' @param response Numeric vector of observed time series
+#' @param predictor Numeric vector of predicted time series
 #' @param lagMax Maximum lag to consider
 #' @return Data.frame with optimal lag and ACF value
 #' @export
-setGeneric("ccfFn", function(obs, pred, lagMax = 5) {
+setGeneric("ccfFn", function(response, predictor, lagMax = 5) {
   standardGeneric("ccfFn")
 })
 
 #' @title Diagnostics
 #' @description Comprehensive diagnostic evaluation
-#' @param obs Numeric vector of observed values
-#' @param pred Numeric vector of predicted values
+#' @param response Numeric vector of observed values
+#' @param predictor Numeric vector of predicted values
 #' @param nDemb Embedding dimension for permutation entropy
 #' @return Data.frame with diagnostic metrics
 #' @export
-setGeneric("diagnostics", function(obs, pred, nDemb = 5) {
+setGeneric("diagnostics", function(response, predictor, nDemb = 5) {
   standardGeneric("diagnostics")
 })
 
@@ -195,12 +195,12 @@ setGeneric("diagnostics", function(obs, pred, nDemb = 5) {
 #' @description Generates flexible diagnostic plots for management procedure evaluation.
 #' Supports multiple input types (numeric vectors, data.frame columns, FLQuants) and 
 #' customizable visualization panels (density, scatter, ROC curves).
-#' @param obs Observed values (numeric vector, character column name with data.frame, or FLQuant)
-#' @param pred Predicted values (numeric vector, character column name with data.frame, or FLQuant)
+#' @param response Observed values (numeric vector, character column name with data.frame, or FLQuant)
+#' @param predictor Predicted values (numeric vector, character column name with data.frame, or FLQuant)
 #' @param ... Additional arguments passed to methods (data, group, threshold, reference, panels, etc.)
 #' @return ggplot object with diagnostic visualization panels
 #' @export
-setGeneric("skillPlot", function(obs, pred, ...) {
+setGeneric("skillPlot", function(response, predictor, ...) {
   standardGeneric("skillPlot")
 })
 

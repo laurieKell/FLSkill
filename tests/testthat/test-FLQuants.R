@@ -6,16 +6,16 @@ test_that("FLQuants methods work correctly", {
   
   # Create sample FLQuants objects
   set.seed(123)
-  obs_data=FLQuants(
+  response_data=FLQuants(
     biomass = FLQuant(rlnorm(50, meanlog = log(1), sdlog = 0.3), 
                      dimnames = list(year = 2000:2049)),
     catch = FLQuant(rlnorm(50, meanlog = log(0.5), sdlog = 0.2), 
                    dimnames = list(year = 2000:2049))
   )
   
-  pred_data=FLQuants(
-    biomass = obs_data$biomass * exp(rnorm(50, sd = 0.1)),
-    catch = obs_data$catch * exp(rnorm(50, sd = 0.1))
+  predictor_data=FLQuants(
+    biomass = response_data$biomass * exp(rnorm(50, sd = 0.1)),
+    catch = response_data$catch * exp(rnorm(50, sd = 0.1))
   )
   
   # Test TSS method
@@ -34,21 +34,21 @@ test_that("FLQuants methods work correctly", {
   # Test PN method
   test_that("PN works with FLQuants", {
     # Create positive/negative indicators
-    obs_sign=FLQuant(ifelse(as.numeric(obs_data$biomass) > 1, 1, -1), 
+    response_sign=FLQuant(ifelse(as.numeric(response_data$biomass) > 1, 1, -1), 
                        dimnames = list(year = 2000:2049))
-    pred_sign=FLQuant(ifelse(as.numeric(pred_data$biomass) > 1, 1, -1), 
+    predictor_sign=FLQuant(ifelse(as.numeric(predictor_data$biomass) > 1, 1, -1), 
                         dimnames = list(year = 2000:2049))
     
-    result=PN(obs_sign, pred_sign)
+    result=PN(response_sign, predictor_sign)
     expect_true(is.data.frame(result))
     expect_true(all(c("TP", "TN", "FP", "FN") %in% names(result)))
   })
   
   # Test rocFn method
   test_that("rocFn works with FLQuants", {
-    labels=FLQuant(as.numeric(obs_data$biomass) > 1, 
+    labels=FLQuant(as.numeric(response_data$biomass) > 1, 
                      dimnames = list(year = 2000:2049))
-    scores=FLQuant(as.numeric(pred_data$biomass), 
+    scores=FLQuant(as.numeric(predictor_data$biomass), 
                      dimnames = list(year = 2000:2049))
     
     result=rocFn(labels, scores)
@@ -58,63 +58,63 @@ test_that("FLQuants methods work correctly", {
   
   # Test roc2 method
   test_that("roc2 works with FLQuants", {
-    result=roc2(obs_data$biomass, pred_data$biomass)
+    result=roc2(response_data$biomass, predictor_data$biomass)
     expect_true(is.data.frame(result))
     expect_true(all(c("state", "label", "ind", "TPR", "FPR", "TP", "TN", "FP", "FN", "TSS") %in% names(result)))
   })
   
   # Test skillScore method
   test_that("skillScore works with FLQuants", {
-    result=skillScore(obs_data$biomass, pred_data$biomass)
+    result=skillScore(response_data$biomass, predictor_data$biomass)
     expect_true(is.data.frame(result))
     expect_true(all(c("AUC", "TSS", "ref", "TPR", "FPR", "TP", "TN", "FP", "FN") %in% names(result)))
   })
   
   # Test skillSummary method
   test_that("skillSummary works with FLQuants", {
-    result=skillSummary(obs_data$biomass, pred_data$biomass)
+    result=skillSummary(response_data$biomass, predictor_data$biomass)
     expect_true(is.data.frame(result))
     expect_true(all(c("AUC", "TSS", "ref", "TPR", "FPR") %in% names(result)))
   })
   
   # Test trend method
   test_that("trend works with FLQuants", {
-    result=trend(obs_data$biomass, pred_data$biomass)
+    result=trend(response_data$biomass, predictor_data$biomass)
     expect_true(is.data.frame(result))
     expect_true(all(c("pearson", "spearman", "direction") %in% names(result)))
   })
   
   # Test state method
   test_that("state works with FLQuants", {
-    result=state(obs_data$biomass, pred_data$biomass)
+    result=state(response_data$biomass, predictor_data$biomass)
     expect_true(is.data.frame(result))
     expect_true(all(c("accuracy", "precision", "recall") %in% names(result)))
   })
   
   # Test variability method
   test_that("variability works with FLQuants", {
-    result=variability(obs_data$biomass, pred_data$biomass)
+    result=variability(response_data$biomass, predictor_data$biomass)
     expect_true(is.data.frame(result))
     expect_true(all(c("sd", "iqr", "cv") %in% names(result)))
   })
   
   # Test compareTS method
   test_that("compareTS works with FLQuants", {
-    result=compareTS(obs_data$biomass, pred_data$biomass)
+    result=compareTS(response_data$biomass, predictor_data$biomass)
     expect_true(is.data.frame(result))
     expect_true(all(c("rmse", "correlation", "sd") %in% names(result)))
   })
   
   # Test ccfFn method
   test_that("ccfFn works with FLQuants", {
-    result=ccfFn(obs_data$biomass, pred_data$biomass)
+    result=ccfFn(response_data$biomass, predictor_data$biomass)
     expect_true(is.data.frame(result))
     expect_true(all(c("lag", "acf") %in% names(result)))
   })
   
   # Test diagnostics method
   test_that("diagnostics works with FLQuants", {
-    result=diagnostics(obs_data$biomass, pred_data$biomass)
+    result=diagnostics(response_data$biomass, predictor_data$biomass)
     expect_true(is.data.frame(result))
     expect_true(all(c("trend", "status", "sd.pred", "sd.obs", "variability", "auc", "tss", "fpr", "tpr", "entropy") %in% names(result)))
   })

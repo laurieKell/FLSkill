@@ -1,27 +1,27 @@
 #' @title Receiver Operating Characteristic (ROC) Curve Generator
 #' @description Creates ROC curve data for stock status classification performance.
-#' @param obs Logical vector of true stock statuses (TRUE=overfished)
-#' @param pred Numeric vector of model predictions (e.g., B/BMSY ratios)
+#' @param response Logical vector of true stock statuses (TRUE=overfished)
+#' @param predictor Numeric vector of model predictions (e.g., B/BMSY ratios)
 #' @return Data.frame with columns:
 #' \itemize{
 #'   \item TPR: True Positive Rate (sensitivity)
 #'   \item FPR: False Positive Rate (1 - specificity)
-#'   \item obs: Ordered true labels
-#'   \item pred: Threshold values
+#'   \item response: Ordered true labels
+#'   \item predictor: Threshold values
 #' }
 #' @examples
-#' obs=runif(100, 0.5, 1.5) < 1
-#' pred=rnorm(100)
-#' roc_data=rocFn2(obs, pred)
+#' response=runif(100, 0.5, 1.5) < 1
+#' predictor=rnorm(100)
+#' roc_data=rocFn2(response, predictor)
 #' @export
-rocFn2<-function(obs, pred) {
-  ord=order(pred, decreasing = TRUE)
-  obs_ordered=obs[ord]
+rocFn2<-function(response, predictor) {
+  ord=order(predictor, decreasing = TRUE)
+  response_ordered=response[ord]
   data.frame(
-    TPR = cumsum(obs_ordered) / sum(obs_ordered),
-    FPR = cumsum(!obs_ordered) / sum(!obs_ordered),
-    obs = obs_ordered,
-    pred = pred[ord]
+    TPR = cumsum(response_ordered) / sum(response_ordered),
+    FPR = cumsum(!response_ordered) / sum(!response_ordered),
+    response = response_ordered,
+    predictor = predictor[ord]
   )
 }
 
@@ -38,33 +38,33 @@ rocFn2<-function(obs, pred) {
 #' FPR_CI_lower, FPR_CI_upper.
 #' @examples
 #' # Basic usage
-#' obs = rlnorm(100, meanlog=log(1), sdlog=0.5)
-#' pred = obs * exp(rnorm(100, sd=0.3))
-#' skillScore(obs, pred, reference=1)
+#' response = rlnorm(100, meanlog=log(1), sdlog=0.5)
+#' predictor = response * exp(rnorm(100, sd=0.3))
+#' skillScore(response, predictor, reference=1)
 #' 
 #' # With confidence intervals
-#' skillScore(obs, pred, reference=1, ci=TRUE, nBoot=1000, seed=123)
+#' skillScore(response, predictor, reference=1, ci=TRUE, nBoot=1000, seed=123)
 #' @export
-setMethod("skillScore", signature(obs="logical", pred="numeric"),
-          function(obs, pred, reference = NULL, threshold = NULL, 
+setMethod("skillScore", signature(response="logical", predictor="numeric"),
+          function(response, predictor, reference = NULL, threshold = NULL, 
                    ci = FALSE, ciLevel = 0.95, nBoot = 1000, seed = NULL) {
-            rocs=rocFn2(obs, pred)
+            rocs=rocFn2(response, predictor)
 
             if (is.null(reference)) {
               flag=which.max(rocs$TPR - rocs$FPR)
-              reference=rocs$pred[flag]
+              reference=rocs$predictor[flag]
             } else 
-              flag=which.min(abs(rocs$pred - reference))
+              flag=which.min(abs(rocs$predictor - reference))
             
-            TP=sum(obs & pred >  rocs$pred[flag])
-            TN=sum(obs & pred <= rocs$pred[flag])
-            FP=sum(obs & pred <= rocs$pred[flag])
-            FN=sum(obs & pred >  rocs$pred[flag])
+            TP=sum(response & predictor >  rocs$predictor[flag])
+            TN=sum(response & predictor <= rocs$predictor[flag])
+            FP=sum(response & predictor <= rocs$predictor[flag])
+            FN=sum(response & predictor >  rocs$predictor[flag])
         
             result = data.frame(
               AUC = auc_trapz(rocs$TPR, rocs$FPR),
               TSS = rocs$TPR[flag] - rocs$FPR[flag],
-              ref = rocs$pred[flag],
+              ref = rocs$predictor[flag],
               TPR = rocs$TPR[flag],
               FPR = rocs$FPR[flag],
               TP = TP, TN = TN, FP = FP, FN = FN
@@ -72,7 +72,7 @@ setMethod("skillScore", signature(obs="logical", pred="numeric"),
         
             # Add confidence intervals if requested
             if (ci) {
-              ciResults = bootstrapSkillMetricsCI(obs, pred, threshold = threshold,
+              ciResults = bootstrapSkillMetricsCI(response, predictor, threshold = threshold,
                                                   reference = reference, nBoot = nBoot,
                                                   ciLevel = ciLevel, seed = seed)
               
@@ -89,11 +89,11 @@ setMethod("skillScore", signature(obs="logical", pred="numeric"),
             
       return(result)})
 
-setMethod("skillScore", signature(obs="numeric", pred="numeric"),
-          function(obs, pred, reference = NULL, threshold = as.numeric(1),  
+setMethod("skillScore", signature(response="numeric", predictor="numeric"),
+          function(response, predictor, reference = NULL, threshold = as.numeric(1),  
                    ci = FALSE, ciLevel = 0.95, nBoot = 1000, seed = NULL) {
             
-          skillScore(obs>threshold, pred=pred,reference=reference,threshold=threshold,
+          skillScore(response>threshold, predictor=predictor,reference=reference,threshold=threshold,
                      ci=ci,ciLevel=ciLevel,nBoot=nBoot,seed=seed)})
                    
                    
@@ -108,18 +108,18 @@ setMethod("skillScore", signature(obs="numeric", pred="numeric"),
 #' distribution of each metric. Confidence intervals are added as additional columns.
 #' @examples
 #' # Basic usage
-#' obs = runif(100, 0.5, 1.5)
-#' pred = obs * exp(rnorm(100, sd=0.2))
-#' skillSummary(obs > 1, pred)
+#' response = runif(100, 0.5, 1.5)
+#' predictor = response * exp(rnorm(100, sd=0.2))
+#' skillSummary(response > 1, predictor)
 #' 
 #' # With confidence intervals
-#' skillSummary(obs > 1, pred, ci=TRUE, nBoot=1000, seed=123)
+#' skillSummary(response > 1, predictor, ci=TRUE, nBoot=1000, seed=123)
 #' @export
-setMethod("skillSummary", signature(obs="logical", pred="numeric"),
-          function(obs, pred, reference = NULL, threshold=null, ci = FALSE, 
+setMethod("skillSummary", signature(response="logical", predictor="numeric"),
+          function(response, predictor, reference = NULL, threshold=null, ci = FALSE, 
                    ciLevel = 0.95, nBoot = 1000, seed = NULL) {
 
-            rocs=rocFn2(obs, pred)
+            rocs=rocFn2(response, predictor)
             
             
             rocs<<-rocs
@@ -127,34 +127,34 @@ setMethod("skillSummary", signature(obs="logical", pred="numeric"),
             if (is.null(reference)) {
               flag=which.max(rocs$TPR - rocs$FPR)
             } else {
-              flag=which.min(abs(rocs$pred - reference))
+              flag=which.min(abs(rocs$predictor - reference))
             }
             
             result = data.frame(
               AUC = auc_trapz(rocs$TPR, rocs$FPR),
               TSS = rocs$TPR[flag] - rocs$FPR[flag],
-              ref = rocs$pred[flag],
+              ref = rocs$predictor[flag],
               TPR = rocs$TPR[flag],
               FPR = rocs$FPR[flag]
             )
 
             # Add confidence intervals if requested
             if (ci) {
-              # For skillSummary, obs and pred are already binary/logical
+              # For skillSummary, response and predictor are already binary/logical
               # We need to determine threshold - assume 1 if numeric, or use median
-              if (is.logical(obs)) {
+              if (is.logical(response)) {
                 threshold = 0.5  # For logical, use 0.5 as threshold
-                obsNumeric = as.numeric(obs)
-                predNumeric = pred
+                responseNumeric = as.numeric(response)
+                predictorNumeric = predictor
               } else {
-                threshold = median(obs, na.rm = TRUE)
-                obsNumeric = obs
-                predNumeric = pred
+                threshold = median(response, na.rm = TRUE)
+                responseNumeric = response
+                predictorNumeric = predictor
               }
               
-              ciResults = bootstrapSkillMetricsCI(obsNumeric, predNumeric, 
+              ciResults = bootstrapSkillMetricsCI(responseNumeric, predictorNumeric, 
                                                   threshold = threshold,
-                                                  reference = if(is.null(reference)) rocs$pred[flag] else reference,
+                                                  reference = if(is.null(reference)) rocs$predictor[flag] else reference,
                                                   nBoot = nBoot,
                                                   ciLevel = ciLevel, seed = seed)
               
@@ -172,11 +172,11 @@ setMethod("skillSummary", signature(obs="logical", pred="numeric"),
             return(result)
           })
 
-setMethod("skillSummary", signature(obs="numeric", pred="numeric"),
-          function(obs, pred, reference = NULL, threshold=as.numeric(1), ci = FALSE, 
+setMethod("skillSummary", signature(response="numeric", predictor="numeric"),
+          function(response, predictor, reference = NULL, threshold=as.numeric(1), ci = FALSE, 
                    ciLevel = 0.95, nBoot = 1000, seed = NULL) {
            
-            skillSummary(obs>threshold,pred=pred,reference=reference,threshold=threshold,
+            skillSummary(response>threshold,predictor=predictor,reference=reference,threshold=threshold,
                          ci=ci,ciLevel=ciLevel,nBoot=nBoot,seed=seed)})
             
 
@@ -185,7 +185,7 @@ skillSummaryOld<-function(om,mp) {
   AUC = auc_trapz(roc1$TPR, roc1$FPR)
   TPR = roc1$TPR
   FPR = roc1$FPR
-  ref = roc1$pred
+  ref = roc1$predictor
   flag = min((ref - 1)^2) == (ref - 1)^2
   flg2 = (TPR - FPR) == max(TPR - FPR)
   rtn = data.frame(AUC = AUC, TSS = ((TPR - FPR)[flag])[1], 
@@ -193,14 +193,14 @@ skillSummaryOld<-function(om,mp) {
                    FPR = FPR[flag][1], TPR2 = TPR[flg2][1], FPR2 = FPR[flg2][1])
   rtn}
 
-cm<-function(hat,obs){
+cm<-function(hat,response){
   if (is.logical(hat)) hat=factor(hat,levels=c("FALSE","TRUE"))
-  if (is.logical(obs)) obs=factor(obs,levels=c("FALSE","TRUE"))
+  if (is.logical(response)) response=factor(response,levels=c("FALSE","TRUE"))
   
   # ------------------------------------------------------------------------------
   # Step 2: Compute the confusion matrix with evaluation metrics
   # ------------------------------------------------------------------------------
-  CM=confusionMatrix(hat, obs, mode="everything")
+  CM=confusionMatrix(hat, response, mode="everything")
   
   # Overall accuracy and Cohen's kappa
   accuracy=CM$overall["Accuracy"]

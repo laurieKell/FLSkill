@@ -72,12 +72,12 @@ setMethod("rocFn", signature(labels="logical", scores="numeric"),
 
 #' @rdname PN
 #' @export
-setMethod("PN", signature(obs="numeric", pred="numeric"),
-          function(obs, pred) {
-            data.frame(TP = sum(obs >= 0 & pred >= 0),
-                       TN = sum(obs < 0 & pred < 0),
-                       FP = sum(obs >= 0 & pred < 0),
-                       FN = sum(obs < 0 & pred >= 0))
+setMethod("PN", signature(response="numeric", predictor="numeric"),
+          function(response, predictor) {
+            data.frame(TP = sum(response >= 0 & predictor >= 0),
+                       TN = sum(response < 0 & predictor < 0),
+                       FP = sum(response >= 0 & predictor < 0),
+                       FN = sum(response < 0 & predictor >= 0))
           })
 
 #' @rdname TSS

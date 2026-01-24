@@ -2,15 +2,15 @@
 
 test_that("skillScore returns CIs when requested", {
   set.seed(123)
-  obs = rlnorm(100, meanlog = log(1), sdlog = 0.5)
-  pred = obs * exp(rnorm(100, sd = 0.2))
+  response = rlnorm(100, meanlog = log(1), sdlog = 0.5)
+  predictor = response * exp(rnorm(100, sd = 0.2))
   
   # Without CI
-  result_no_ci = skillScore(obs, pred, ci = FALSE)
+  result_no_ci = skillScore(response, predictor, ci = FALSE)
   expect_false(any(grepl("CI", names(result_no_ci))))
   
   # With CI (using fewer bootstrap samples for speed)
-  result_ci = skillScore(obs, pred, ci = TRUE, nBoot = 100, seed = 123)
+  result_ci = skillScore(response, predictor, ci = TRUE, nBoot = 100, seed = 123)
   
   # Check that CI columns exist
   expect_true("AUC_CI_lower" %in% names(result_ci))
@@ -41,15 +41,15 @@ test_that("skillScore returns CIs when requested", {
 
 test_that("skillSummary returns CIs when requested", {
   set.seed(123)
-  obs = rlnorm(100, meanlog = log(1), sdlog = 0.5)
-  pred = obs * exp(rnorm(100, sd = 0.2))
+  response = rlnorm(100, meanlog = log(1), sdlog = 0.5)
+  predictor = response * exp(rnorm(100, sd = 0.2))
   
   # Without CI
-  result_no_ci = skillSummary(obs, pred, ci = FALSE)
+  result_no_ci = skillSummary(response, predictor, ci = FALSE)
   expect_false(any(grepl("CI", names(result_no_ci))))
   
   # With CI
-  result_ci = skillSummary(obs, pred, ci = TRUE, nBoot = 100, seed = 123)
+  result_ci = skillSummary(response, predictor, ci = TRUE, nBoot = 100, seed = 123)
   
   # Check that CI columns exist
   expect_true("AUC_CI_lower" %in% names(result_ci))
@@ -70,33 +70,33 @@ test_that("CI calculation handles edge cases", {
   set.seed(123)
   
   # Small sample size
-  obs_small = rlnorm(10, meanlog = log(1), sdlog = 0.5)
-  pred_small = obs_small * exp(rnorm(10, sd = 0.2))
+  response_small = rlnorm(10, meanlog = log(1), sdlog = 0.5)
+  predictor_small = response_small * exp(rnorm(10, sd = 0.2))
   
   # Should handle small samples gracefully
-  result = skillScore(obs_small, pred_small, ci = TRUE, nBoot = 50, seed = 123)
+  result = skillScore(response_small, predictor_small, ci = TRUE, nBoot = 50, seed = 123)
   expect_true(is.data.frame(result))
   # CIs might be NA for very small samples, which is acceptable
   
   # Perfect separation
-  obs_perf = c(rep(0, 50), rep(1, 50))
-  pred_perf = c(rnorm(50, mean = 0, sd = 0.5), rnorm(50, mean = 2, sd = 0.5))
+  response_perf = c(rep(0, 50), rep(1, 50))
+  predictor_perf = c(rnorm(50, mean = 0, sd = 0.5), rnorm(50, mean = 2, sd = 0.5))
   
-  result_perf = skillScore(obs_perf, pred_perf, threshold = 0.5, ci = TRUE, nBoot = 100, seed = 123)
+  result_perf = skillScore(response_perf, predictor_perf, threshold = 0.5, ci = TRUE, nBoot = 100, seed = 123)
   expect_true(is.data.frame(result_perf))
   expect_true(result_perf$AUC > 0.9)  # Should be high for perfect separation
 })
 
 test_that("CI level parameter works", {
   set.seed(123)
-  obs = rlnorm(100, meanlog = log(1), sdlog = 0.5)
-  pred = obs * exp(rnorm(100, sd = 0.2))
+  response = rlnorm(100, meanlog = log(1), sdlog = 0.5)
+  predictor = response * exp(rnorm(100, sd = 0.2))
   
   # 90% CI
-  result_90 = skillScore(obs, pred, ci = TRUE, ciLevel = 0.90, nBoot = 100, seed = 123)
+  result_90 = skillScore(response, predictor, ci = TRUE, ciLevel = 0.90, nBoot = 100, seed = 123)
   
   # 95% CI (default)
-  result_95 = skillScore(obs, pred, ci = TRUE, ciLevel = 0.95, nBoot = 100, seed = 123)
+  result_95 = skillScore(response, predictor, ci = TRUE, ciLevel = 0.95, nBoot = 100, seed = 123)
   
   # 90% CI should be narrower than 95% CI
   ci_width_90 = result_90$AUC_CI_upper - result_90$AUC_CI_lower
@@ -107,12 +107,12 @@ test_that("CI level parameter works", {
 
 test_that("Seed parameter provides reproducibility", {
   set.seed(123)
-  obs = rlnorm(100, meanlog = log(1), sdlog = 0.5)
-  pred = obs * exp(rnorm(100, sd = 0.2))
+  response = rlnorm(100, meanlog = log(1), sdlog = 0.5)
+  predictor = response * exp(rnorm(100, sd = 0.2))
   
   # Same seed should give same results
-  result1 = skillScore(obs, pred, ci = TRUE, nBoot = 100, seed = 456)
-  result2 = skillScore(obs, pred, ci = TRUE, nBoot = 100, seed = 456)
+  result1 = skillScore(response, predictor, ci = TRUE, nBoot = 100, seed = 456)
+  result2 = skillScore(response, predictor, ci = TRUE, nBoot = 100, seed = 456)
   
   expect_equal(result1$AUC_CI_lower, result2$AUC_CI_lower, tolerance = 1e-6)
   expect_equal(result1$AUC_CI_upper, result2$AUC_CI_upper, tolerance = 1e-6)
@@ -122,13 +122,13 @@ test_that("Seed parameter provides reproducibility", {
 
 test_that("CI calculation is consistent across different reference values", {
   set.seed(123)
-  obs = rlnorm(100, meanlog = log(1), sdlog = 0.5)
-  pred = obs * exp(rnorm(100, sd = 0.2))
+  response = rlnorm(100, meanlog = log(1), sdlog = 0.5)
+  predictor = response * exp(rnorm(100, sd = 0.2))
   
   # Different reference values
-  result_ref1 = skillScore(obs, pred, reference = 0.8, ci = TRUE, nBoot = 100, seed = 123)
-  result_ref2 = skillScore(obs, pred, reference = 1.0, ci = TRUE, nBoot = 100, seed = 123)
-  result_ref3 = skillScore(obs, pred, reference = 1.2, ci = TRUE, nBoot = 100, seed = 123)
+  result_ref1 = skillScore(response, predictor, reference = 0.8, ci = TRUE, nBoot = 100, seed = 123)
+  result_ref2 = skillScore(response, predictor, reference = 1.0, ci = TRUE, nBoot = 100, seed = 123)
+  result_ref3 = skillScore(response, predictor, reference = 1.2, ci = TRUE, nBoot = 100, seed = 123)
   
   # All should have valid CIs
   expect_true(all(!is.na(result_ref1[c("AUC_CI_lower", "AUC_CI_upper")])))

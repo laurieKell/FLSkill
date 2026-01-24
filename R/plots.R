@@ -63,29 +63,29 @@ calculateAuc <- function(TPR, FPR) {
 }
 
 # Internal helper to calculate skill metrics for a group
-calculateSkillMetrics <- function(obs, pred, threshold = 1, reference = 1) {
+calculateSkillMetrics <- function(response, predictor, threshold = 1, reference = 1) {
   # Remove NAs
-  valid = !is.na(obs) & !is.na(pred)
-  obs = obs[valid]
-  pred = pred[valid]
+  valid = !is.na(response) & !is.na(predictor)
+  response = response[valid]
+  predictor = predictor[valid]
   
-  if (length(obs) == 0 || length(pred) == 0) {
+  if (length(response) == 0 || length(predictor) == 0) {
     return(data.frame(AUC = NA_real_, TSS = NA_real_, BSS = NA_real_, 
                       ref = NA_real_, TPR = NA_real_, FPR = NA_real_,
                       TPR2 = NA_real_, FPR2 = NA_real_))
   }
   
   # Create binary labels
-  labels = obs > threshold
+  labels = response > threshold
   
   # Calculate ROC curve
-  ord = order(pred, decreasing = TRUE)
+  ord = order(predictor, decreasing = TRUE)
   labelsOrdered = labels[ord]
   roc1 = data.frame(
     TPR = cumsum(labelsOrdered) / sum(labelsOrdered),
     FPR = cumsum(!labelsOrdered) / sum(!labelsOrdered),
     labels = labelsOrdered,
-    pred = pred[ord]
+    predictor = predictor[ord]
   )
   
   # Calculate AUC
@@ -94,7 +94,7 @@ calculateSkillMetrics <- function(obs, pred, threshold = 1, reference = 1) {
   # Find TSS at reference point
   tpr = roc1$TPR
   fpr = roc1$FPR
-  ref = roc1$pred
+  ref = roc1$predictor
   flag = min((ref - reference)^2) == (ref - reference)^2
   idxRef = which(flag)[1]
   
@@ -116,9 +116,9 @@ calculateSkillMetrics <- function(obs, pred, threshold = 1, reference = 1) {
 }
 
 #' @rdname skillPlot
-#' @param data Data.frame containing assessment results (optional if obs/pred are vectors)
-#' @param obs Character name of column with true stock status, or numeric vector
-#' @param pred Character name of column with predicted status, or numeric vector  
+#' @param data Data.frame containing assessment results (optional if response/predictor are vectors)
+#' @param response Character name of column with true stock status, or numeric vector
+#' @param predictor Character name of column with predicted status, or numeric vector  
 #' @param group Character name of grouping column (e.g., "Scenario"). If NULL, automatically uses "Scenario" if present, otherwise no grouping.
 #' @param threshold Numeric threshold for classification (default=1)
 #' @param reference Reference value for status classification (default=1)
@@ -132,40 +132,40 @@ calculateSkillMetrics <- function(obs, pred, threshold = 1, reference = 1) {
 #' @return ggplot object with diagnostic visualization panels
 #' @examples
 #' set.seed(123)
-#' obs  = rlnorm(200, meanlog=log(1), sdlog=0.5)
+#' response  = rlnorm(200, meanlog=log(1), sdlog=0.5)
 #' df = data.frame(Scenario = rep(1:2, each=100),
-#'                  obs  = obs,
-#'                  pred = obs*c(rlnorm(100, meanlog=log(1), sdlog=0.2),
+#'                  response  = response,
+#'                  predictor = response*c(rlnorm(100, meanlog=log(1), sdlog=0.2),
 #'                               rlnorm(100, meanlog=log(1), sdlog=0.5)*1.5))
 #'                               
 #' # Using column names with data.frame
-#' skillPlot(obs="obs", pred="pred", data=df)
+#' skillPlot(response="response", predictor="predictor", data=df)
 #' 
 #' # Using numeric vectors directly
-#' skillPlot(obs=df$obs, pred=df$pred)
+#' skillPlot(response=df$response, predictor=df$predictor)
 #' 
 #' # Custom panels
-#' skillPlot(obs="obs", pred="pred", data=df, panels=c("scatter", "roc"))
+#' skillPlot(response="response", predictor="predictor", data=df, panels=c("scatter", "roc"))
 #' 
 #' # Custom grouping
-#' skillPlot(obs="obs", pred="pred", data=df, group="Scenario")
+#' skillPlot(response="response", predictor="predictor", data=df, group="Scenario")
 #' @import ggplot2
 #' @export
 setMethod("skillPlot", 
-          signature(obs="ANY", pred="ANY"),
-          function(obs, pred, data = NULL, group = NULL, threshold = 1, reference = 1,
+          signature(response="ANY", predictor="ANY"),
+          function(response, predictor, data = NULL, group = NULL, threshold = 1, reference = 1,
                    xLabel = "", limits = c(0, 5),
                    labels = c("Observed", "Predicted"),
                    panels = c("density", "scatter", "roc"),
                    logScale = TRUE, maxPoints = 1000, themeStyle = "bw") {
             
             # Handle different input types
-            if (is.character(obs) && is.character(pred) && !is.null(data)) {
+            if (is.character(response) && is.character(predictor) && !is.null(data)) {
               # Column names provided with data.frame
-              if (!obs %in% names(data) || !pred %in% names(data)) {
-                stop("Column names 'obs' and 'pred' must exist in 'data'")
+              if (!response %in% names(data) || !predictor %in% names(data)) {
+                stop("Column names 'response' and 'predictor' must exist in 'data'")
               }
-              dat = data.frame(obs = data[[obs]], pred = data[[pred]])
+              dat = data.frame(response = data[[response]], predictor = data[[predictor]])
               if (!is.null(group) && group %in% names(data)) {
                 dat$group = data[[group]]
               } else if ("Scenario" %in% names(data)) {
@@ -173,18 +173,18 @@ setMethod("skillPlot",
               } else {
                 dat$group = "All"
               }
-            } else if (is.numeric(obs) && is.numeric(pred)) {
+            } else if (is.numeric(response) && is.numeric(predictor)) {
               # Direct numeric vectors
-              if (length(obs) != length(pred)) {
-                stop("'obs' and 'pred' must have the same length")
+              if (length(response) != length(predictor)) {
+                stop("'response' and 'predictor' must have the same length")
               }
-              dat = data.frame(obs = obs, pred = pred, group = "All")
+              dat = data.frame(response = response, predictor = predictor, group = "All")
             } else {
-              stop("Invalid input: 'obs' and 'pred' must be either column names (with 'data') or numeric vectors")
+              stop("Invalid input: 'response' and 'predictor' must be either column names (with 'data') or numeric vectors")
             }
             
             # Remove NAs
-            dat = dat[!is.na(dat$obs) & !is.na(dat$pred), , drop = FALSE]
+            dat = dat[!is.na(dat$response) & !is.na(dat$predictor), , drop = FALSE]
             if (nrow(dat) == 0) {
               stop("No valid data points after removing NAs")
             }
@@ -194,7 +194,7 @@ setMethod("skillPlot",
               groups = unique(dat$group)
               smryList = lapply(groups, function(g) {
                 subsetDat = dat[dat$group == g, , drop = FALSE]
-                metrics = calculateSkillMetrics(subsetDat$obs, subsetDat$pred, 
+                metrics = calculateSkillMetrics(subsetDat$response, subsetDat$predictor, 
                                                    threshold = threshold, reference = reference)
                 metrics$group = g
                 return(metrics)
@@ -204,7 +204,7 @@ setMethod("skillPlot",
               # Calculate ROC data by group
               rocList = lapply(groups, function(g) {
                 subsetDat = dat[dat$group == g, , drop = FALSE]
-                rocDat = tryIt(fnRoc(subsetDat$obs > reference, subsetDat$pred))
+                rocDat = tryIt(fnRoc(subsetDat$response > reference, subsetDat$predictor))
                 if (!is.null(rocDat)) {
                   rocDat$group = g
                   return(rocDat)
@@ -216,9 +216,9 @@ setMethod("skillPlot",
               # Facet formula
               facetFormula = if (length(groups) > 1) "group ~ ." else NULL
             } else {
-              smry = calculateSkillMetrics(dat$obs, dat$pred, threshold = threshold, reference = reference)
+              smry = calculateSkillMetrics(dat$response, dat$predictor, threshold = threshold, reference = reference)
               smry$group = "All"
-              rocDat = tryIt(fnRoc(dat$obs > reference, dat$pred))
+              rocDat = tryIt(fnRoc(dat$response > reference, dat$predictor))
               if (!is.null(rocDat)) {
                 rocDat$group = "All"
               }
@@ -238,9 +238,9 @@ setMethod("skillPlot",
             if ("density" %in% panels) {
               # Reshape data for density plot
               dt2 = data.frame(
-                value = c(dat$obs, dat$pred),
-                variable = factor(rep(c("obs", "pred"), each = nrow(dat)),
-                                 levels = c("obs", "pred"),
+                value = c(dat$response, dat$predictor),
+                variable = factor(rep(c("response", "predictor"), each = nrow(dat)),
+                                 levels = c("response", "predictor"),
                                  labels = labels)
               )
               if ("group" %in% names(dat)) {
@@ -288,7 +288,7 @@ setMethod("skillPlot",
                 datSample = dat
               }
               
-              p2 = ggplot(datSample, aes(x = obs, y = pred)) +
+              p2 = ggplot(datSample, aes(x = response, y = predictor)) +
                 geom_point(size = 1.25, alpha = 0.75)
               
               if (!is.null(facetFormula)) {
@@ -309,14 +309,14 @@ setMethod("skillPlot",
               
               # Add confusion matrix labels
               if (nrow(dat) > 0) {
-                obsRange = range(dat$obs, na.rm = TRUE)
-                predRange = range(dat$pred, na.rm = TRUE)
+                responseRange = range(dat$response, na.rm = TRUE)
+                predictorRange = range(dat$predictor, na.rm = TRUE)
                 if (logScale) {
-                  xPos = 10^(log10(obsRange))
-                  yPos = 10^(log10(predRange))
+                  xPos = 10^(log10(responseRange))
+                  yPos = 10^(log10(predictorRange))
                 } else {
-                  xPos = obsRange
-                  yPos = predRange
+                  xPos = responseRange
+                  yPos = predictorRange
                 }
                 
                 labelData = data.frame(
@@ -334,11 +334,11 @@ setMethod("skillPlot",
               # Add metric labels
               if (nrow(smry) > 0) {
                 if (logScale) {
-                  xMax = 10^(log10(max(dat$obs, na.rm = TRUE)))
-                  yMax = 10^(log10(max(dat$pred, na.rm = TRUE)))
+                  xMax = 10^(log10(max(dat$response, na.rm = TRUE)))
+                  yMax = 10^(log10(max(dat$predictor, na.rm = TRUE)))
                 } else {
-                  xMax = max(dat$obs, na.rm = TRUE)
-                  yMax = max(dat$pred, na.rm = TRUE)
+                  xMax = max(dat$response, na.rm = TRUE)
+                  yMax = max(dat$predictor, na.rm = TRUE)
                 }
                 
                 p2 = p2 +
@@ -420,25 +420,25 @@ setMethod("skillPlot",
             return(combined)
           })
 
-# Backward-compatible wrapper for old signature: skillPlot(data, obs="col1", hat="col2")
-# Note: This is not exported - use the new signature: skillPlot(obs="col1", pred="col2", data=data)
+# Backward-compatible wrapper for old signature: skillPlot(data, response="col1", hat="col2")
+# Note: This is not exported - use the new signature: skillPlot(response="col1", predictor="col2", data=data)
 #' @rdname skillPlot  
-#' @param hat Character name of column with predicted status (old parameter name, use 'pred' in new signature)
+#' @param hat Character name of column with predicted status (old parameter name, use 'predictor' in new signature)
 #' @keywords internal
-skillPlot_old <- function(data, obs, hat, threshold = 1, reference = 1,
+skillPlot_old <- function(data, response, hat, threshold = 1, reference = 1,
                           xLabel = "", limits = c(0, 5),
-                          labels = c(obs, hat), group = NULL, ...) {
+                          labels = c(response, hat), group = NULL, ...) {
   # Map old signature to new generic
-  skillPlot(obs = obs, pred = hat, data = data, group = group,
+  skillPlot(response = response, predictor = hat, data = data, group = group,
             threshold = threshold, reference = reference,
             xLabel = xLabel, limits = limits, labels = labels, ...)
 }
 
 # Note: The S4 method handles new signatures:
-# - skillPlot(obs=data$col1, pred=data$col2) 
-# - skillPlot(obs="col1", pred="col2", data=data)
-# For old signature skillPlot(data, obs="col1", hat="col2"), 
-# users should use: skillPlot(obs="col1", pred="col2", data=data)
+# - skillPlot(response=data$col1, predictor=data$col2) 
+# - skillPlot(response="col1", predictor="col2", data=data)
+# For old signature skillPlot(data, response="col1", hat="col2"), 
+# users should use: skillPlot(response="col1", predictor="col2", data=data)
 
 #'
 #' @examples
@@ -462,7 +462,7 @@ skillPlot_old <- function(data, obs, hat, threshold = 1, reference = 1,
 #'   geom_point(aes(OM,Indicator))+
 #'   xlab("True Values")+ylab("Indicator")
 #' 
-#' skillPlot(testDF,obs="OM",hat="Indicator")
+#' skillPlot(testDF,response="OM",hat="Indicator")
 #' 
 #' pROC::auc(testDF$OM>1,testDF$Indicator)
 #' }

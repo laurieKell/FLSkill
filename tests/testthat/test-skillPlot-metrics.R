@@ -8,15 +8,15 @@ test_that("AUC calculation matches pROC for simple cases", {
   
   # Test case 1: Perfect separation
   set.seed(123)
-  obs_perfect = c(rep(FALSE, 50), rep(TRUE, 50))
-  pred_perfect = c(rnorm(50, mean = 0, sd = 0.5), rnorm(50, mean = 2, sd = 0.5))
+  response_perfect = c(rep(FALSE, 50), rep(TRUE, 50))
+  predictor_perfect = c(rnorm(50, mean = 0, sd = 0.5), rnorm(50, mean = 2, sd = 0.5))
   
   # Calculate AUC using our method
-  roc_data = FLSkill::rocFn2(obs_perfect, pred_perfect)
+  roc_data = FLSkill::rocFn2(response_perfect, predictor_perfect)
   auc_ours = FLSkill:::auc_trapz(roc_data$TPR, roc_data$FPR)
   
   # Calculate AUC using pROC
-  roc_obj = pROC::roc(obs_perfect, pred_perfect, quiet = TRUE)
+  roc_obj = pROC::roc(response_perfect, predictor_perfect, quiet = TRUE)
   auc_proc = as.numeric(pROC::auc(roc_obj))
   
   # Should be very close (within 0.01 due to different calculation methods)
@@ -25,13 +25,13 @@ test_that("AUC calculation matches pROC for simple cases", {
   
   # Test case 2: Random prediction (should be ~0.5)
   set.seed(456)
-  obs_random = sample(c(FALSE, TRUE), 100, replace = TRUE)
-  pred_random = rnorm(100)
+  response_random = sample(c(FALSE, TRUE), 100, replace = TRUE)
+  predictor_random = rnorm(100)
   
-  roc_data = FLSkill::rocFn2(obs_random, pred_random)
+  roc_data = FLSkill::rocFn2(response_random, predictor_random)
   auc_ours = FLSkill:::auc_trapz(roc_data$TPR, roc_data$FPR)
   
-  roc_obj = pROC::roc(obs_random, pred_random, quiet = TRUE)
+  roc_obj = pROC::roc(response_random, predictor_random, quiet = TRUE)
   auc_proc = as.numeric(pROC::auc(roc_obj))
   
   expect_true(abs(auc_ours - auc_proc) < 0.05,
@@ -39,13 +39,13 @@ test_that("AUC calculation matches pROC for simple cases", {
   
   # Test case 3: Moderate separation
   set.seed(789)
-  obs_mod = c(rep(FALSE, 50), rep(TRUE, 50))
-  pred_mod = c(rnorm(50, mean = 0, sd = 1), rnorm(50, mean = 1, sd = 1))
+  response_mod = c(rep(FALSE, 50), rep(TRUE, 50))
+  predictor_mod = c(rnorm(50, mean = 0, sd = 1), rnorm(50, mean = 1, sd = 1))
   
-  roc_data = FLSkill::rocFn2(obs_mod, pred_mod)
+  roc_data = FLSkill::rocFn2(response_mod, predictor_mod)
   auc_ours = FLSkill:::auc_trapz(roc_data$TPR, roc_data$FPR)
   
-  roc_obj = pROC::roc(obs_mod, pred_mod, quiet = TRUE)
+  roc_obj = pROC::roc(response_mod, predictor_mod, quiet = TRUE)
   auc_proc = as.numeric(pROC::auc(roc_obj))
   
   expect_true(abs(auc_ours - auc_proc) < 0.02,
@@ -59,19 +59,19 @@ test_that("AUC from skillScore matches pROC", {
   
   set.seed(123)
   # Create realistic fishery data
-  obs = rlnorm(100, meanlog = log(1), sdlog = 0.5)
-  pred = obs * exp(rnorm(100, sd = 0.2))
+  response = rlnorm(100, meanlog = log(1), sdlog = 0.5)
+  predictor = response * exp(rnorm(100, sd = 0.2))
   
-  # Binary classification: overfished (obs < 1) vs healthy (obs >= 1)
+  # Binary classification: overfished (response < 1) vs healthy (response >= 1)
   threshold = 1.0
   
   # Calculate using skillScore
-  skill_result = FLSkill::skillScore(obs, pred, threshold = threshold)
+  skill_result = FLSkill::skillScore(response, predictor, threshold = threshold)
   auc_ours = skill_result$AUC
   
   # Calculate using pROC
-  labels = obs > threshold
-  roc_obj = pROC::roc(labels, pred, quiet = TRUE)
+  labels = response > threshold
+  roc_obj = pROC::roc(labels, predictor, quiet = TRUE)
   auc_proc = as.numeric(pROC::auc(roc_obj))
   
   # Should match closely
@@ -85,19 +85,19 @@ test_that("AUC from skillPlot internal calculations matches pROC", {
   library(pROC)
   
   set.seed(123)
-  obs = rlnorm(100, meanlog = log(1), sdlog = 0.5)
-  pred = obs * exp(rnorm(100, sd = 0.2))
+  response = rlnorm(100, meanlog = log(1), sdlog = 0.5)
+  predictor = response * exp(rnorm(100, sd = 0.2))
   threshold = 1.0
   reference = 1.0
   
   # Use internal calculation function from skillPlot (in plots.R)
   # Calculate ROC data first
-  roc_data = FLSkill::rocFn2(obs > threshold, pred)
+  roc_data = FLSkill::rocFn2(response > threshold, predictor)
   auc_ours = FLSkill:::auc_trapz(roc_data$TPR, roc_data$FPR)
   
   # Calculate using pROC
-  labels = obs > threshold
-  roc_obj = pROC::roc(labels, pred, quiet = TRUE)
+  labels = response > threshold
+  roc_obj = pROC::roc(labels, predictor, quiet = TRUE)
   auc_proc = as.numeric(pROC::auc(roc_obj))
   
   expect_true(abs(auc_ours - auc_proc) < 0.02,
@@ -110,14 +110,14 @@ test_that("ROC curve structure is correct", {
   library(pROC)
   
   set.seed(123)
-  obs = sample(c(TRUE, FALSE), 100, replace = TRUE)
-  pred = rnorm(100)
+  response = sample(c(TRUE, FALSE), 100, replace = TRUE)
+  predictor = rnorm(100)
   
   # Our method
-  roc_ours = FLSkill::rocFn2(obs, pred)
+  roc_ours = FLSkill::rocFn2(response, predictor)
   
   # pROC method
-  roc_obj = pROC::roc(obs, pred, quiet = TRUE)
+  roc_obj = pROC::roc(response, predictor, quiet = TRUE)
   
   # Should end at (1,1) - start may not be exactly (0,0) depending on data
   expect_equal(roc_ours$FPR[nrow(roc_ours)], 1, tolerance = 1e-6)
@@ -138,12 +138,12 @@ test_that("ROC curve structure is correct", {
 
 test_that("TSS calculation is consistent", {
   set.seed(123)
-  obs = rlnorm(100, meanlog = log(1), sdlog = 0.5)
-  pred = obs * exp(rnorm(100, sd = 0.2))
+  response = rlnorm(100, meanlog = log(1), sdlog = 0.5)
+  predictor = response * exp(rnorm(100, sd = 0.2))
   threshold = 1.0
   
   # Calculate using skillScore (uses reference=NULL, so finds optimal threshold)
-  skill_result = FLSkill::skillScore(obs, pred, threshold = threshold, reference = NULL)
+  skill_result = FLSkill::skillScore(response, predictor, threshold = threshold, reference = NULL)
   tss_skill = skill_result$TSS
   ref_used = skill_result$ref
   tpr_skill = skill_result$TPR
@@ -154,7 +154,7 @@ test_that("TSS calculation is consistent", {
   expect_equal(tss_skill, tpr_skill - fpr_skill, tolerance = 1e-6)
   
   # Calculate using rocFn2 and find optimal threshold (max TPR - FPR)
-  roc_data = FLSkill::rocFn2(obs > threshold, pred)
+  roc_data = FLSkill::rocFn2(response > threshold, predictor)
   optimal_idx = which.max(roc_data$TPR - roc_data$FPR)
   tss_manual = roc_data$TPR[optimal_idx] - roc_data$FPR[optimal_idx]
   
@@ -171,32 +171,32 @@ test_that("AUC handles edge cases correctly", {
   library(pROC)
   
   # Edge case 1: All positive
-  obs_all_pos = rep(TRUE, 50)
-  pred_all_pos = rnorm(50)
+  response_all_pos = rep(TRUE, 50)
+  predictor_all_pos = rnorm(50)
   
-  roc_data = FLSkill::rocFn2(obs_all_pos, pred_all_pos)
+  roc_data = FLSkill::rocFn2(response_all_pos, predictor_all_pos)
   auc_ours = FLSkill:::auc_trapz(roc_data$TPR, roc_data$FPR)
   
   # Should handle gracefully (AUC undefined but function should not crash)
   expect_true(is.numeric(auc_ours))
   
   # Edge case 2: All negative
-  obs_all_neg = rep(FALSE, 50)
-  pred_all_neg = rnorm(50)
+  response_all_neg = rep(FALSE, 50)
+  predictor_all_neg = rnorm(50)
   
-  roc_data = FLSkill::rocFn2(obs_all_neg, pred_all_neg)
+  roc_data = FLSkill::rocFn2(response_all_neg, predictor_all_neg)
   auc_ours = FLSkill:::auc_trapz(roc_data$TPR, roc_data$FPR)
   
   expect_true(is.numeric(auc_ours))
   
   # Edge case 3: Perfect prediction (all 1s and 0s)
-  obs_perf = c(rep(FALSE, 25), rep(TRUE, 25))
-  pred_perf = c(rep(0, 25), rep(1, 25))
+  response_perf = c(rep(FALSE, 25), rep(TRUE, 25))
+  predictor_perf = c(rep(0, 25), rep(1, 25))
   
-  roc_data = FLSkill::rocFn2(obs_perf, pred_perf)
+  roc_data = FLSkill::rocFn2(response_perf, predictor_perf)
   auc_ours = FLSkill:::auc_trapz(roc_data$TPR, roc_data$FPR)
   
-  roc_obj = pROC::roc(obs_perf, pred_perf, quiet = TRUE)
+  roc_obj = pROC::roc(response_perf, predictor_perf, quiet = TRUE)
   auc_proc = as.numeric(pROC::auc(roc_obj))
   
   # Perfect prediction should give AUC = 1
@@ -219,16 +219,16 @@ test_that("Multiple scenarios produce consistent AUC values", {
   results_proc = numeric(n_scenarios)
   
   for (i in 1:n_scenarios) {
-    obs = rlnorm(n_per_scenario, meanlog = log(1), sdlog = 0.5)
-    pred = obs * exp(rnorm(n_per_scenario, sd = 0.2))
+    response = rlnorm(n_per_scenario, meanlog = log(1), sdlog = 0.5)
+    predictor = response * exp(rnorm(n_per_scenario, sd = 0.2))
     threshold = 1.0
     
     # Our method
-    roc_data = FLSkill::rocFn2(obs > threshold, pred)
+    roc_data = FLSkill::rocFn2(response > threshold, predictor)
     results_ours[i] = FLSkill:::auc_trapz(roc_data$TPR, roc_data$FPR)
     
     # pROC method
-    roc_obj = pROC::roc(obs > threshold, pred, quiet = TRUE)
+    roc_obj = pROC::roc(response > threshold, predictor, quiet = TRUE)
     results_proc[i] = as.numeric(pROC::auc(roc_obj))
     
     # Should match within tolerance
@@ -243,18 +243,18 @@ test_that("AUC calculation is consistent across different threshold values", {
   library(pROC)
   
   set.seed(123)
-  obs = rlnorm(100, meanlog = log(1), sdlog = 0.5)
-  pred = obs * exp(rnorm(100, sd = 0.2))
+  response = rlnorm(100, meanlog = log(1), sdlog = 0.5)
+  predictor = response * exp(rnorm(100, sd = 0.2))
   
   thresholds = c(0.5, 0.8, 1.0, 1.2, 1.5)
   
   for (threshold in thresholds) {
     # Our method
-    roc_data = FLSkill::rocFn2(obs > threshold, pred)
+    roc_data = FLSkill::rocFn2(response > threshold, predictor)
     auc_ours = FLSkill:::auc_trapz(roc_data$TPR, roc_data$FPR)
     
     # pROC method
-    roc_obj = pROC::roc(obs > threshold, pred, quiet = TRUE)
+    roc_obj = pROC::roc(response > threshold, predictor, quiet = TRUE)
     auc_proc = as.numeric(pROC::auc(roc_obj))
     
     expect_true(abs(auc_ours - auc_proc) < 0.02,

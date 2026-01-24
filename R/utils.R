@@ -4,63 +4,63 @@
 
 #' @rdname trend
 #' @export
-setMethod("trend", signature(obs="numeric", pred="numeric"),
-          function(obs, pred) {
+setMethod("trend", signature(response="numeric", predictor="numeric"),
+          function(response, predictor) {
             data.frame(
-              pearson = cor(pred, obs, method = "pearson"),
-              spearman = cor(pred, obs, method = "spearman"),
-              direction = mean(sign(diff(pred)) == sign(diff(obs)), na.rm = TRUE)
+              pearson = cor(predictor, response, method = "pearson"),
+              spearman = cor(predictor, response, method = "spearman"),
+              direction = mean(sign(diff(predictor)) == sign(diff(response)), na.rm = TRUE)
             )
           })
 
 
 #' @rdname state
 #' @export
-setMethod("state", signature(obs="numeric", pred="numeric"),
-          function(obs, pred) {
-            obs_status=ifelse(obs < 1, "Overfished", "Healthy")
-            pred_status=ifelse(pred < 1, "Overfished", "Healthy")
+setMethod("state", signature(response="numeric", predictor="numeric"),
+          function(response, predictor) {
+            response_status=ifelse(response < 1, "Overfished", "Healthy")
+            predictor_status=ifelse(predictor < 1, "Overfished", "Healthy")
             data.frame(
-              accuracy = mean(obs_status == pred_status),
-              precision = sum(obs_status == "Overfished" & pred_status == "Overfished") / sum(pred_status == "Overfished"),
-              recall = sum(obs_status == "Overfished" & pred_status == "Overfished") / sum(obs_status == "Overfished")
+              accuracy = mean(response_status == predictor_status),
+              precision = sum(response_status == "Overfished" & predictor_status == "Overfished") / sum(predictor_status == "Overfished"),
+              recall = sum(response_status == "Overfished" & predictor_status == "Overfished") / sum(response_status == "Overfished")
             )
           })
 
 
 #' @rdname variability
 #' @export
-setMethod("variability", signature(obs="numeric", pred="numeric"),
-          function(obs, pred) {
+setMethod("variability", signature(response="numeric", predictor="numeric"),
+          function(response, predictor) {
             data.frame(
-              sd = sd(pred) / sd(obs),
-              iqr = IQR(pred) / IQR(obs),
-              cv = (sd(pred) / mean(pred)) / (sd(obs) / mean(obs))
+              sd = sd(predictor) / sd(response),
+              iqr = IQR(predictor) / IQR(response),
+              cv = (sd(predictor) / mean(predictor)) / (sd(response) / mean(response))
             )
           })
 
 
 #' @rdname diagnostics
 #' @export
-setMethod("diagnostics", signature(obs="numeric", pred="numeric"),
-          function(obs, pred, nDemb = 5) {
+setMethod("diagnostics", signature(response="numeric", predictor="numeric"),
+          function(response, predictor, nDemb = 5) {
             # Standardize data (z-score normalization)
             stdz = function(x) (x - mean(x, na.rm = TRUE)) / sd(x, na.rm = TRUE)
-            roc = rocFn(stdz(obs) > 1, stdz(pred))
-            tss = skillScore(stdz(pred), stdz(obs) - 1)
+            roc = rocFn(stdz(response) > 1, stdz(predictor))
+            tss = skillScore(stdz(predictor), stdz(response) - 1)
             
             return(
               data.frame(
-                trend     = cor(pred, obs),
-                status    = mean((pred < 1) == (obs < 1)),
-                sd.pred   = sd(pred),
-                sd.obs    = sd(obs),
-                variability = sd(pred) / sd(obs),
+                trend     = cor(predictor, response),
+                status    = mean((predictor < 1) == (response < 1)),
+                sd.pred   = sd(predictor),
+                sd.obs    = sd(response),
+                variability = sd(predictor) / sd(response),
                 auc       = FLCore:::auc(TPR = roc$TPR, FPR = roc$FPR),
                 tss       = tss$TSS,
                 fpr       = tss$FPR,
                 tpr       = tss$TPR,
-                entropy   = permutation_entropy(ordinal_pattern_distribution(obs, ndemb = nDemb))
+                entropy   = permutation_entropy(ordinal_pattern_distribution(response, ndemb = nDemb))
               )
             )
             
@@ -73,26 +73,26 @@ setMethod("diagnostics", signature(obs="numeric", pred="numeric"),
 
 #' @rdname compareTS
 #' @export
-setMethod("compareTS", signature(obs="numeric", pred="numeric"),
-          function(obs, pred) {
-            min_length=min(length(obs), length(pred))
-            obs=obs[1:min_length]
-            pred=pred[1:min_length]
-            rmse=sqrt(mean((obs - pred)^2))
-            correlation=cor(obs, pred)
+setMethod("compareTS", signature(response="numeric", predictor="numeric"),
+          function(response, predictor) {
+            min_length=min(length(response), length(predictor))
+            response=response[1:min_length]
+            predictor=predictor[1:min_length]
+            rmse=sqrt(mean((response - predictor)^2))
+            correlation=cor(response, predictor)
             results=data.frame(
               rmse = rmse,
               correlation = correlation,
-              sd = sd(pred - obs)
+              sd = sd(predictor - response)
             )
             return(results)
           })
 
 #' @rdname ccfFn
 #' @export
-setMethod("ccfFn", signature(obs="numeric", pred="numeric"),
-          function(obs, pred, lagMax = 5) {
-            rtn=ccf(obs, pred, plot = FALSE, lag.max = lagMax)
+setMethod("ccfFn", signature(response="numeric", predictor="numeric"),
+          function(response, predictor, lagMax = 5) {
+            rtn=ccf(response, predictor, plot = FALSE, lag.max = lagMax)
             subset(data.frame(lag = rtn$lag, acf = rtn$acf), acf == max(acf))
           })
 
@@ -125,23 +125,23 @@ auc_trapz<-function(TPR, FPR) {
 
 #' @title Basic Confusion Matrix
 #' @description Computes basic confusion matrix statistics for binary classification.
-#' @param obs Logical or binary vector of observed values
-#' @param pred Logical or binary vector of predicted values
+#' @param response Logical or binary vector of observed values
+#' @param predictor Logical or binary vector of predicted values
 #' @return Data.frame with TP, TN, FP, FN
 #' @keywords internal
-conf_matrix_basic<-function(obs, pred) {
+conf_matrix_basic<-function(response, predictor) {
   data.frame(
-    TP = sum(obs & pred),
-    TN = sum(!obs & !pred),
-    FP = sum(!obs & pred),
-    FN = sum(obs & !pred)
+    TP = sum(response & predictor),
+    TN = sum(!response & !predictor),
+    FP = sum(!response & predictor),
+    FN = sum(response & !predictor)
   )
 }
 
 #' @title Bootstrap Confidence Intervals for Skill Metrics
 #' @description Calculates bootstrap confidence intervals for AUC, TSS, TPR, and FPR.
-#' @param obs Numeric vector of observed values
-#' @param pred Numeric vector of predicted values
+#' @param response Numeric vector of observed values
+#' @param predictor Numeric vector of predicted values
 #' @param threshold Threshold for classification (default=1)
 #' @param reference Reference value for classification (default=1)
 #' @param nBoot Number of bootstrap samples (default=1000)
@@ -149,18 +149,18 @@ conf_matrix_basic<-function(obs, pred) {
 #' @param seed Random seed for reproducibility (default=NULL)
 #' @return Data.frame with metric names, estimates, and CI bounds
 #' @keywords internal
-bootstrapSkillMetricsCI <- function(obs, pred, threshold = 1, reference = 1,
+bootstrapSkillMetricsCI <- function(response, predictor, threshold = 1, reference = 1,
                                      nBoot = 1000, ciLevel = 0.95, seed = NULL) {
   if (!is.null(seed)) {
     set.seed(seed)
   }
   
   # Remove NAs
-  valid = !is.na(obs) & !is.na(pred)
-  obs = obs[valid]
-  pred = pred[valid]
-  
-  n = length(obs)
+  valid = !is.na(response) & !is.na(predictor)
+  response = response[valid]
+  predictor = predictor[valid]
+
+  n = length(response)
   if (n < 10) {
     warning("Sample size too small for bootstrap CI calculation")
     return(data.frame(
@@ -170,17 +170,17 @@ bootstrapSkillMetricsCI <- function(obs, pred, threshold = 1, reference = 1,
       ciUpper = NA_real_
     ))
   }
-  
+
   # Calculate original metrics (rocFn2 is in same package, call directly)
-  rocs = rocFn2(obs > threshold, pred)
+  rocs = rocFn2(response > threshold, predictor)
   aucOrig = auc_trapz(rocs$TPR, rocs$FPR)
   
   # Find reference point
-  flag = which.min(abs(rocs$pred - reference))
+  flag = which.min(abs(rocs$predictor - reference))
   tssOrig = rocs$TPR[flag] - rocs$FPR[flag]
   tprOrig = rocs$TPR[flag]
   fprOrig = rocs$FPR[flag]
-  
+
   # Bootstrap samples
   bootAuc = numeric(nBoot)
   bootTss = numeric(nBoot)
@@ -190,12 +190,12 @@ bootstrapSkillMetricsCI <- function(obs, pred, threshold = 1, reference = 1,
   for (i in 1:nBoot) {
     # Resample with replacement
     idx = sample(n, n, replace = TRUE)
-    obsBoot = obs[idx]
-    predBoot = pred[idx]
+    responseBoot = response[idx]
+    predictorBoot = predictor[idx]
     
     # Calculate metrics for bootstrap sample
     tryCatch({
-      rocsBoot = rocFn2(obsBoot > threshold, predBoot)
+      rocsBoot = rocFn2(responseBoot > threshold, predictorBoot)
       
       # AUC
       if (length(rocsBoot$TPR) > 1 && length(rocsBoot$FPR) > 1) {
@@ -205,7 +205,7 @@ bootstrapSkillMetricsCI <- function(obs, pred, threshold = 1, reference = 1,
       }
       
       # Find reference point
-      flagBoot = which.min(abs(rocsBoot$pred - reference))
+      flagBoot = which.min(abs(rocsBoot$predictor - reference))
       if (length(flagBoot) > 0 && flagBoot[1] <= length(rocsBoot$TPR)) {
         bootTss[i] = rocsBoot$TPR[flagBoot[1]] - rocsBoot$FPR[flagBoot[1]]
         bootTpr[i] = rocsBoot$TPR[flagBoot[1]]
