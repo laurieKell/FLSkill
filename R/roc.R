@@ -95,3 +95,9 @@ setMethod("TSS", signature(TP="numeric", TN="numeric", FP="numeric", FN="numeric
             
             return(tss)
           })
+
+specificity<-function(TPR) TPR
+sensitivity<-function(FPR) FPR+1
+
+FPR<-function(specificity) 1-specificity
+TPR<-function(sensitivity) sensitivity

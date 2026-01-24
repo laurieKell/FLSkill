@@ -124,7 +124,7 @@ setGeneric("skillScore", function(obs, pred, reference = NULL, threshold = 1,
 #' @param ... Additional arguments passed to methods
 #' @return Data.frame with comprehensive skill metrics and optional confidence intervals
 #' @export
-setGeneric("skillSummary", function(obs, pred, reference = NULL, ci = FALSE,
+setGeneric("skillSummary", function(obs, pred, reference = NULL, threshold = 1, ci = FALSE,
                                      ciLevel = 0.95, nBoot = 1000, seed = NULL, ...) {
   standardGeneric("skillSummary")
 })
