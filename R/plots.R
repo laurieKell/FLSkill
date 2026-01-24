@@ -342,7 +342,7 @@ setMethod("skillPlot",
                 }
                 
                 p2 = p2 +
-                  geom_label(aes(x = Inf, y = ref, label = paste("BSS=", round(BSS, 2))),
+                  geom_label(aes(x = Inf, y = ref, label = paste("TSS=", round(BSS, 2))),
                             data = smry, fill = "white", hjust = 1, vjust = 0,
                             size = 4.0, col = "blue", alpha = 0.9, inherit.aes = FALSE) +
                   geom_label(aes(x = limits[1], y = reference, 
