@@ -5,21 +5,21 @@
 \alias{roc2,FLQuant,FLQuant-method}
 \title{Calculate ROC (Receiver Operating Characteristic) statistics for two numeric vectors.}
 \usage{
-roc2(state, ind, ...)
+roc2(response, predictor, ...)
 
-\S4method{roc2}{FLQuant,FLQuant}(state, ind, ...)
+\S4method{roc2}{FLQuant,FLQuant}(response, predictor, ...)
 }
 \arguments{
-\item{state}{A numeric vector representing the state values.}
+\item{response}{A numeric vector representing the response values.}
 
-\item{indicator}{A numeric vector representing the indicator values.}
+\item{predictor}{A numeric vector representing the predictor values.}
 }
 \value{
 A data frame containing the following columns:
   \describe{
-    \item{state}{The state values.}
-    \item{label}{A logical vector indicating whether each state is greater than 1 (TRUE) or not (FALSE).}
-    \item{indicator}{The indicator values.}
+    \item{response}{The response values.}
+    \item{label}{A logical vector indicating whether each response is greater than 1 (TRUE) or not (FALSE).}
+    \item{predictor}{The predictor values.}
     \item{TPR}{The True Positive Rate (TPR) calculated as TP / (TP + FN).}
     \item{FPR}{The False Positive Rate (FPR) calculated as FP / (FP + TN).}
     \item{TP}{The True Positives (TP).}
@@ -27,7 +27,7 @@ A data frame containing the following columns:
     \item{FP}{The False Positives (FP).}
     \item{FN}{The False Negatives (FN).}
     \item{TSS}{The True Skill Score (TSS) calculated as (TP / (TP + FN)) - (FP / (FP + TN)).}
-    \item{order}{The order of the indicator values after sorting in descending order.}
+    \item{order}{The order of the predictor values after sorting in descending order.}
   }
 }
 \description{

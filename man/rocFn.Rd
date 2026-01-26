@@ -36,14 +36,14 @@ scores = c(0.9, 0.1, 0.8, 0.7, 0.3)
 rocCoords = rocFn(labels, scores)
 }
 
-# In this example, we first generate sample data for state and indicator vectors. 
+# In this example, we first generate sample data for response and predictor vectors. 
 # Generate sample data
-state = c(0.5, 2.3, 1.2, 1.8, 3.0, 0.7)
-indicator = c(0.6, 2.2, 1.1, 1.9, 2.8, 0.5)
+response = c(0.5, 2.3, 1.2, 1.8, 3.0, 0.7)
+predictor = c(0.6, 2.2, 1.1, 1.9, 2.8, 0.5)
 
 # Then, we call the roc function to calculate ROC statistics and print the results.
 # Calculate ROC statistics
-rocResult = roc2(state, indicator)
+rocResult = roc2(response, predictor)
 
 # Print the ROC statistics
 rocResult
