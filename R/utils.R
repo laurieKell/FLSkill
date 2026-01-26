@@ -250,7 +250,6 @@ bootstrapSkillMetricsCI <- function(response, predictor, threshold = 1, referenc
     ciLower = c(aucCI[1], tssCI[1], tprCI[1], fprCI[1]),
     ciUpper = c(aucCI[2], tssCI[2], tprCI[2], fprCI[2]),
     stringsAsFactors = FALSE
-  )
-}
+  )}
 
 
