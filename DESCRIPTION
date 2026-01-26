@@ -36,5 +36,5 @@ Collate:
     'lag.R'
     'FLQuants.R'
     'pid.R'
-    'trend.R'
+    'slope.R'
 RoxygenNote: 7.3.3
