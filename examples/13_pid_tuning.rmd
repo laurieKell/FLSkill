@@ -327,8 +327,8 @@ pidMSE<-function(om,eq,
                  Kp          =0.5,
                  gMin        =0.2,
                  maxChange   =0.3,
-                 lambdabstate=1,
-                 lambdafstate=1,
+                 lambdaBstate=1,
+                 lambdaFstate=1,
                  lambdaBtrnd =1,
                  lambdaFtrnd =1) {
 
@@ -387,8 +387,8 @@ if (!FALSE){
     MP$survey[,ac(iYr-1)]=tsb(om[-1])[,ac(iYr-1)]%/%msy["tsb"]
     MP$hrate[ ,ac(iYr-1)]=(MP$catch[,ac(iYr-1)]%/%ebiomass(om)[,ac(iYr-1)])%/%msy["harvest"]
     
-    MP$sTrnd[ ,ac(iYr-1)]=trend(MP$survey[,ac(iYr-(n:1))],n=n)
-    MP$hTrnd[ ,ac(iYr-1)]=trend(MP$hrate[ ,ac(iYr-(n:1))],n=n)
+    MP$sTrnd[ ,ac(iYr-1)]=slope(MP$survey[,ac(iYr-(n:1))],n=n)
+    MP$hTrnd[ ,ac(iYr-1)]=slope(MP$hrate[ ,ac(iYr-(n:1))],n=n)
     
     for (it in seq_len(nits)) {
       
@@ -439,7 +439,7 @@ names(bhs)=ids
 
 
 ```{r, PID,  fig.width=10,fig.height=5}
-save(bhs,file="C:/tmp/bhs.RData")
+source("C:/active/flr/FLSkill/R/pid.R")
 
 rtn=pidMSE(propagate(icesdata[[27]],100),bhs[[27]],Kp=0.5,
            lambdaBstate =1.0,
