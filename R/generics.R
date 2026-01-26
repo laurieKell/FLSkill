@@ -72,14 +72,14 @@ setGeneric("rocFn", function(labels, scores) standardGeneric("rocFn"))
 #'
 #' This function calculates ROC statistics, including True Positive Rate (TPR), False Positive Rate (FPR), True Positives (TP), True Negatives (TN), False Positives (FP), False Negatives (FN), and True Skill Score (TSS) for two numeric vectors.
 #'
-#' @param state A numeric vector representing the state values.
-#' @param indicator A numeric vector representing the indicator values.
+#' @param response A numeric vector representing the response values.
+#' @param predictor A numeric vector representing the predictor values.
 #' 
 #' @return A data frame containing the following columns:
 #'   \describe{
-#'     \item{state}{The state values.}
-#'     \item{label}{A logical vector indicating whether each state is greater than 1 (TRUE) or not (FALSE).}
-#'     \item{indicator}{The indicator values.}
+#'     \item{response}{The response values.}
+#'     \item{label}{A logical vector indicating whether each response is greater than 1 (TRUE) or not (FALSE).}
+#'     \item{predictor}{The predictor values.}
 #'     \item{TPR}{The True Positive Rate (TPR) calculated as TP / (TP + FN).}
 #'     \item{FPR}{The False Positive Rate (FPR) calculated as FP / (FP + TN).}
 #'     \item{TP}{The True Positives (TP).}
@@ -87,11 +87,11 @@ setGeneric("rocFn", function(labels, scores) standardGeneric("rocFn"))
 #'     \item{FP}{The False Positives (FP).}
 #'     \item{FN}{The False Negatives (FN).}
 #'     \item{TSS}{The True Skill Score (TSS) calculated as (TP / (TP + FN)) - (FP / (FP + TN)).}
-#'     \item{order}{The order of the indicator values after sorting in descending order.}
+#'     \item{order}{The order of the predictor values after sorting in descending order.}
 #'   }
 #' 
 #' @export
-setGeneric("roc2", function(state, ind, ...) {
+setGeneric("roc2", function(response, predictor, ...) {
   standardGeneric("roc2")
 })
 

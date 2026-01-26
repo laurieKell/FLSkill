@@ -67,17 +67,17 @@ setMethod("rocFn", signature(labels="FLQuant", scores="FLQuant"),
 
 #' @rdname roc2
 #' @export
-setMethod("roc2", signature(state="FLQuant", ind="FLQuant"),
-          function(state, ind, ...) {
+setMethod("roc2", signature(response="FLQuant", predictor="FLQuant"),
+          function(response, predictor, ...) {
             # Extract numeric values
-            stateVals = as.numeric(state)
-            indVals = as.numeric(ind)
+            responseVals = as.numeric(response)
+            predictorVals = as.numeric(predictor)
             
-            # Order by indicator values (descending)
-            ord = order(indVals, decreasing = TRUE)
-            stateOrdered = stateVals[ord]
-            indOrdered = indVals[ord]
-            label = stateOrdered > 1
+            # Order by predictor values (descending)
+            ord = order(predictorVals, decreasing = TRUE)
+            responseOrdered = responseVals[ord]
+            predictorOrdered = predictorVals[ord]
+            label = responseOrdered > 1
             
             # Calculate ROC statistics
             tpr = cumsum(label) / sum(label)
@@ -91,9 +91,9 @@ setMethod("roc2", signature(state="FLQuant", ind="FLQuant"),
             tss = (tp / (tp + fn) - fp / (fp + tn))
             
             return(data.frame(
-              state = stateOrdered,
+              response = responseOrdered,
               label = label,
-              ind = indOrdered,
+              predictor = predictorOrdered,
               TPR = tpr,
               FPR = fpr,
               TP = tp,
