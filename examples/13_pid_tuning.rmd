@@ -1,0 +1,1086 @@
+---
+title: "BIM Resilience – PID HCR Tuning"
+subtitle: "Generic PID-style Harvest Control Rule across ICES Category 1 Stocks"
+author: "L.T. Kell"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output:
+  html_document:
+    toc: true
+    number_sections: true
+#bibliography: refs.bib
+#biblio-style: apalike
+vignette: >
+  %\VignetteIndexEntry{Tuning a PID-style harvest control rule across ICES Category 1 stocks}
+  %\VignetteEncoding{UTF-8}
+  %\VignetteEngine{knitr::rmarkdown}
+editor_options:
+  markdown:
+    wrap: 72
+---
+
+# Introduction
+
+This document implements and tunes a generic PID-style harvest control
+rule (HCR) that adjusts TAC multiplicatively based on four indicators:
+biomass state (`bstate`), fishing mortality state (`fstate`), biomass
+trend (`btrnd`), and F trend (`ftrnd`). The rule is applied across
+multiple ICES Category 1 stocks within the FLR framework.
+
+The objective is to find a single parameterisation (gains and weights)
+that performs robustly across stocks, using management strategy
+evaluation (MSE) as in the existing BIM resilience analyses.
+
+```{r knitr-setup, echo=FALSE}
+knitr::opts_chunk$set(
+  echo      =FALSE,
+  warning   =FALSE,
+  message   =FALSE,
+  cache     =TRUE,
+  cache.path="cache/13_pid_tuning/",
+  fig.path  ="figs/13_pid_tuning/",
+  dev       ="png",
+  dpi       =300)
+
+iFig =0
+iTab =0
+```
+
+# Setup
+
+```{r setup}
+library(FLCore)
+library(FLBRP)
+library(FLasher)
+library(FLRebuild)
+library(FLAssess)
+library(FLife)
+library(FLSRTMB)
+library(FLSkill)
+
+library(icesdata)
+library(ggplot2)
+library(ggplotFL)
+library(plyr)
+library(dplyr)
+library(reshape)
+library(RColorBrewer)
+library(scales)
+library(stringr)
+library(ggpubr)
+library(ggridges)
+
+library(statcomp)
+library(patchwork)
+
+library(future.apply)
+library(parallel)
+library(doParallel)
+library(foreach)
+
+# For GA tuning (optional)
+# install.packages("GA")
+library(GA)
+```
+
+```{r}
+source("C:/active/flr/FLSkill/R/trend.R")
+source("C:/active/flrpapers/neaMac/source/boxFn.R")
+```
+
+# Data and stocks
+
+We follow the same Category 1 stock selection and data loading used in
+`12_icedata.Rmd`. Modify paths as needed for your environment.
+
+```{r load-data}
+data(icesdata)
+
+ids=names(icesdata)
+id=ids[35]
+
+load("C:/active/flrpapers/haf/risk/data/lsmps.RData")
+
+bbmsy=FLQuants(llply(icesdata, function(x) ssb( x)/benchmark(x)["btrigger"]))
+ffmsy=FLQuants(llply(icesdata, function(x) fbar(x)/benchmark(x)["fmsy"]))
+
+survey=FLQuants(llply(icesdata, function(x) rlnorm(1,log(tsb(x[-1])/mean(tsb(x[-1]))),0.2)))
+hrate =FLQuants(llply(icesdata, function(x) rlnorm(1,log(catch(x)/ebiomass(x)),       0.2)))
+lmn   =llply(lsmps, function(x) tryIt(lmean(x)))
+```
+
+
+```{r, biomass-state, fig.width=12,fig.height=6}
+plot(mcf(FLQuants("B/B[MSY]"=bbmsy[[id]],"Survey"=survey[[id]])))
+```
+
+**Figure `r iFig=iFig+1; iFig`** 
+
+```{r, f-state, fig.width=12,fig.height=8}
+plot(mcf(FLQuants("F/F[MSY]"=ffmsy[[id]],"Harvest~Rate"=hrate[[id]],"L[mean]"=1/lmn[[id]])))
+```
+
+**Figure `r iFig=iFig+1; iFig`** 
+
+```{r, roc, fig.width=12,fig.height=4}
+biomass=mdply(ids, function(id) tryIt(cbind(.id=id,model.frame(FLQuants(bbmsy =bbmsy[[id]],
+                                                                        survey=survey[[id]]),drop=TRUE))))[,-1]
+f      =mdply(ids, function(id) tryIt(cbind(.id=id,model.frame(FLQuants(ffmsy =ffmsy[[id]],
+                                                                        hrate =hrate[[id]],
+                                                                        lmean=1/lmn[[id]]),drop=TRUE))))[,-1]
+
+surveyROC=ddply(biomass,.(.id), with, FLSkill::roc2(state=bbmsy/mean(bbmsy),ind=survey/mean(survey)))
+ hrateROC=ddply(f,      .(.id), with, FLSkill::roc2(state=ffmsy/mean(ffmsy),ind=hrate/mean(hrate)))
+ lmeanROC=ddply(f,      .(.id), with, FLSkill::roc2(state=ffmsy/mean(ffmsy),ind=lmean/mean(lmean)))
+
+ggplot(rbind(cbind(What="Survey",      surveyROC),
+             cbind(What="Harvest~Rate",hrateROC),
+             cbind(What="L[mean]",     lmeanROC)))+
+  geom_path(aes(FPR,TPR,group=.id))+
+  geom_abline(aes(slope=1,intercept=0),col="red")+
+  facet_wrap(~What)
+```
+
+**Figure `r iFig=iFig+1; iFig`** 
+
+```{r, fig.width=12,fig.height=4}
+dat=model.frame(FLQuants(response =ffmsy[[id]],
+                         predictor=1/lmn[[id]]))
+dat=transform(dat,response =response/median(response),
+                  predictor=predictor/median(predictor))
+ss=skillScore(response=dat$response,predictor=dat$predictor)
+skillSummary(response=dat$response,predictor=dat$predictor)
+skillPlot(response=dat$response,predictor=dat$predictor)
+```
+
+```{r, State, fig.width=8,fig.height=4}
+bstate=mdply(ids, function(id) 
+  cbind(.id=id,model.frame(FLQuants(response=bbmsy[[id]],predictor=survey[[id]]),drop=TRUE)))[,-1]
+bstate=ddply(bstate,.(.id), with, tryIt(skillSummary(response=response,predictor=predictor/mean(predictor))))
+
+fstate=mdply(ids, function(id) 
+  cbind(.id=id,model.frame(FLQuants(response=ffmsy[[id]],predictor=hrate[[id]]),drop=TRUE)))[,-1]
+fstate=ddply(fstate,.(.id), with, tryIt(skillSummary(response=response,predictor=predictor/mean(predictor))))
+
+lstate=mdply(names(lmn[laply(lmn, is.FLQuant)]), function(id) 
+  cbind(.id=id,model.frame(mcf(FLQuants(response=ffmsy[[id]],predictor=1/lmn[[id]])),drop=TRUE)))[,-1]
+lstate=ddply(lstate,.(.id), with, tryIt(skillSummary(response=response,predictor=predictor/mean(predictor))))
+
+state=rbind.fill(cbind(Indicator="Survey",                 bstate),
+                 cbind(Indicator="Relative\nHarvest Rate", fstate),
+                 cbind(Indicator="Length-Based\nIndicator",lstate))
+
+ggplot(state, aes(x=AUC, y=Indicator)) +
+  geom_density_ridges(
+    stat="binline",
+    bins=20,
+    scale=0.9,
+    draw_baseline=FALSE
+  ) +
+  xlab("AUC") +
+  ylab("")
+```
+
+**Figure `r iFig=iFig+1; iFig`** 
+
+```{r Trend, fig.width=8,fig.height=4}
+btrnd=mdply(ids, function(id) { 
+  tryIt(cbind(.id=id,model.frame(FLQuants(response =trend(bbmsy[[id]]/mean(bbmsy[[id]])),
+                                          predictor=trend(survey[[id]]/mean(survey[[id]]))),drop=TRUE)))})[,-1]
+btrnd=ddply(btrnd,.(.id), with, tryIt(skillSummary(response=exp(response),predictor=exp(predictor))))
+
+ftrnd=mdply(ids, function(id) 
+  tryIt(cbind(.id=id,model.frame(FLQuants(response=trend(ffmsy[[id]]/mean(ffmsy[[id]])),
+                                          predictor=trend(hrate[[id]]/mean(hrate[[id]]))),drop=TRUE))))[,-1]
+ftrnd=ddply(ftrnd,.(.id), with, tryIt(skillSummary(response=exp(response),predictor=exp(predictor))))
+
+ltrnd=mdply(names(lmn[laply(lmn, is.FLQuant)]), function(id) 
+  tryIt(cbind(.id=id,model.frame(mcf(FLQuants(response=trend(ffmsy[[id]]/mean(ffmsy[[id]])),
+                                              predictor=trend(1/lmn[[id]]*mean(lmn[[id]])))),drop=TRUE))))[,-1]
+ltrnd=ddply(ltrnd,.(.id), with, tryIt(skillSummary(response=exp(response),predictor=exp(predictor))))
+
+trnd=rbind.fill(cbind(Indicator="Survey",                 btrnd),
+                cbind(Indicator="Relative\nHarvest Rate", ftrnd),
+                cbind(Indicator="Length-Based\nIndicator",ltrnd))
+
+ggplot(trnd, aes(x=AUC, y=Indicator)) +
+  geom_density_ridges(
+    stat="binline",
+    bins=20,
+    scale=0.9,
+    draw_baseline=FALSE
+  ) +
+  xlab("AUC") +
+  ylab("")
+```
+
+**Figure `r iFig=iFig+1; iFig`** 
+
+```{r, entropy, fig.width=12,fig.height=4}
+ent=ldply(bbmsy, function(x) tryIt(data.frame(entropy=permutation_entropy(ordinal_pattern_distribution(x=x, ndemb=5)))))
+
+ggplot(ent, aes(x=entropy,y=1)) +
+  geom_density_ridges(
+    stat="binline",
+    bins=20,
+    scale=0.9,
+    draw_baseline=FALSE
+  ) +
+  xlab("Entropy") +
+  ylab("")
+```
+**Figure `r iFig=iFig+1; iFig`** 
+
+```{r, biomass, , fig.width=12,fig.height=4}
+histB=ldply(bbmsy, as.data.frame,drop=TRUE)
+histF=ldply(ffmsy, as.data.frame,drop=TRUE)
+
+fn<-function(x) {
+  r=quantile(x, probs=c(0.05, 0.33, 0.5, 0.66, 0.66))
+  names(r)=c("ymin", "lower", "middle", "upper", "ymax")
+  r}
+
+dtB=ddply(histB,.(.id), subset, year==max(year))
+ggplot(histB,aes(x=factor(.id,levels=dtB$.id[order(dtB$data)]),y=data))+
+  stat_summary(fun.data=fn, geom="boxplot")+
+  geom_point(aes(x=.id,y=data),data=dtB,col="red")+
+  geom_hline(aes(yintercept=1),col="red")+
+    theme(legend.position="bottom",strip.text.y=element_text(angle=90),
+                                   strip.text.x=element_text(angle=0),
+                                   axis.text.x=element_text(angle=45, hjust=1))+
+  xlab("Stock")+ylab(expression(B/B[MSY]))
+```
+**Figure `r iFig=iFig+1; iFig`** 
+
+```{r, f, , fig.width=12,fig.height=6}
+
+dtF=ddply(histF,.(.id), subset, year==max(year))
+ggplot(histF,aes(x=factor(.id,levels=dtB$.id[order(dtB$data)]),y=data))+
+  stat_summary(fun.data=fn, geom="boxplot")+
+  geom_point(aes(x=.id,y=data),data=dtF,col="red")+
+  geom_hline(aes(yintercept=1),col="red")+
+    theme(legend.position="bottom",strip.text.y=element_text(angle=90),
+                                 strip.text.x=element_text(angle=0),
+                                 axis.text.x=element_text(angle=45, hjust=1))+
+  xlab("Stock")+ylab(expression(F/F[MSY]))
+```
+
+
+# PID-style HCR: nextCatch function
+
+A generic P-only HCR on log-catch, with AUC-based weights and entropy-based damping.
+
+## Design rationale
+
+The rule operates on four error terms (biomass state, F state, biomass
+trend, F trend) weighted by their diagnostic quality (AUC - Area Under
+ROC Curve). The composite error drives a proportional control on
+log-catch. High entropy (signal uncertainty) damps the response to
+avoid chasing noise.
+
+## Implementation
+
+```{r define-nextCatch}
+#' Next-year catch from a PID-style HCR
+#'
+#' @description Calculates the next year's TAC/catch based on four indicators
+#'   (biomass state, Fstate, trends) using AUC-weighted composite error and
+#'   entropy-based damping.
+#'
+#' @param bstate     Numeric. Biomass state (log-ratio to target).
+#' @param fstate     Numeric. Fishing mortality state (log-ratio to target).
+#' @param btrnd      Numeric. Biomass trend (slope).
+#' @param ftrnd      Numeric. F trend (slope).
+#' @param aucBstate  Numeric. AUC (0.5-1) for bstate indicator quality.
+#' @param aucFstate  Numeric. AUC for fstate indicator quality.
+#' @param aucBtrnd   Numeric. AUC for btrnd indicator quality.
+#' @param aucFtrnd   Numeric. AUC for ftrnd indicator quality.
+#' @param ent        Numeric. Entropy (0-1) of biomass time series.
+#' @param CNow       Numeric. Current year's catch.
+#' @param lambdaBstate Numeric (default 1.0). Multiplier on bstate weight.
+#' @param lambdaFstate Numeric (default 1.0). Multiplier on fstate weight.
+#' @param lambdaBtrnd  Numeric (default 1.0). Multiplier on btrnd weight.
+#' @param lambdaFtrnd  Numeric (default 1.0). Multiplier on ftrnd weight.
+#' @param Kp         Numeric (default 0.5). Proportional gain.
+#' @param entLow     Numeric (default 0.0). Lower entropy bound.
+#' @param entHigh    Numeric (default 1.0). Upper entropy bound.
+#' @param gMin       Numeric (default 0.2). Minimum gain at high entropy.
+#' @param maxChange  Numeric (default 0.3). Max ± annual TAC change (30%).
+#'
+#' @return Numeric. Next year's catch, constrained by maxChange.
+#' @details
+#'   The rule constructs a composite error E from the four indicators,
+#'   weighted by lambda_i * max(0, AUC_i - 0.5). Entropy dampens the
+#'   proportional response via a linear gain g_ent between 1 (low entropy)
+#'   and gMin (high entropy). The update is multiplicative on log-scale:
+#'   C_next=C_now * exp( g_ent * Kp * E ), clipped to [C_now*(1-maxChange),
+#'   C_now*(1+maxChange)].
+#'
+#' @export
+nextCatch<-function(bstate, fstate, btrnd, ftrnd,
+                      aucBstate, aucFstate, aucBtrnd, aucFtrnd,
+                      ent,
+                      CNow,
+                      lambdaBstate = 1.0, lambdaFstate = 1.0,
+                      lambdaBtrnd  = 1.0, lambdaFtrnd  = 1.0,
+                      Kp           = 0.5,   # P gain
+                      Kd           = 0.0,   # D gain (set >0 to use trends)
+                      entLow       = 0.0,
+                      entHigh      = 1.0,
+                      gMin         = 0.2,
+                      maxChange    = 0.3) {
+if(FALSE){
+bstate=1.5;fstate=0.9;btrnd=0.1;ftrnd=-0.1;aucBstate=aucFstate=aucBtrnd=aucFtrnd=0.5; ent=0.5
+CNow=1000
+
+                      lambdaBstate = 1.0; lambdaFstate = 1.0
+                      lambdaBtrnd  = 1.0; lambdaFtrnd  = 1.0
+                      Kp           = 0.5   # P gain
+                      Kd           = 0.0   # D gain (set >0 to use trends)
+                      entLow       = 0.0
+                      entHigh      = 1.0
+                      gMin         = 0.2
+                      maxChange    = 0.3
+}
+
+  ## 1. Build "good = positive" errors
+  eB = bstate   # biomass above target -> positive
+  eF =-fstate   # F above target is bad, so flip sign
+  eDB= btrnd    # biomass increasing -> positive
+  eDF=-ftrnd    # F increasing is bad, so flip sign
+
+  ## 2. AUC-based skills
+  skillP=c(
+    max(0, aucBstate - 0.5) * lambdaBstate,
+    max(0, aucFstate - 0.5) * lambdaFstate)
+  skillD=c(
+    max(0, aucBtrnd  - 0.5) * lambdaBtrnd,
+    max(0, aucFtrnd  - 0.5) * lambdaFtrnd)
+
+  if (sum(skillP) == 0) skillP=rep(1/2, 2) else skillP=skillP / sum(skillP)
+  if (sum(skillD) == 0) skillD=rep(1/2, 2) else skillD=skillD / sum(skillD)
+
+  ## 3. Separate P and D composite errors
+  EP=skillP[1] * eB  + skillP[2] * eF
+  ED=skillD[1] * eDB + skillD[2] * eDF
+
+  ## 4. Entropy-based gain
+  den=entHigh - entLow
+  entScaled=if (den == 0) 0 else (ent - entLow) / den
+  entScaled=min(max(entScaled, 0), 1)
+  gEnt     =1 - (1 - gMin) * entScaled
+
+  ## 5. PD control on log-catch
+  delta=gEnt * (Kp * EP + Kd * ED)
+
+  ## 6. Multiplicative TAC update with cap
+  CTarget=CNow * exp(delta)
+
+  CMin=CNow * (1 - maxChange)
+  CMax=CNow * (1 + maxChange)
+
+  CNext=max(CMin, min(CMax, CTarget))
+
+  CNext}
+```
+
+
+
+# Indicator construction
+
+# PID HCR within an MSE loop
+
+```{r test, evl=FALSE}
+#' Run MSE with PID-style HCR for a single stock
+#'
+#' @param om    FLStock operating model.
+#' @param eq    FLBRP equilibrium reference points.
+#' @param start Integer. First projection year.
+#' @param end   Integer. Last projection year.
+#' @param nits  Integer (default 100). Number of iterations/replicates.
+#' @param Kp Numeric (default 0.5). Proportional gain.
+#' @param gMin Numeric (default 0.2). Minimum entropy-based gain.
+#' @param maxChange Numeric (default 0.3). Max ± annual TAC change.
+#' @param lambda* Numeric (default 1.0 each). Weight multipliers for indicators.
+#'
+#' @return FLStock with projected catch guided by PID HCR.
+#'
+#' @details
+#'   For each year in [start, end), computes indicators (bstate, fstate,
+#'   btrnd, ftrnd, entropy, AUC) and calls nextCatch() to determine
+#'   next-year TAC. Projects forward using fwd() with recruitment
+#'   deviations sampled from the stock-recruit residuals.
+pidMSE<-function(om,eq, 
+                 auc=rep(1,4),ent=1, 
+                 start=dims(om)$maxyear, end=start+30, 
+                 nits =dims(om)$iter,
+                 sd=0.3, b=0.5,
+                 n           =3,
+                 Kp          =0.5,
+                 gMin        =0.2,
+                 maxChange   =0.3,
+                 lambdaBstate=1,
+                 lambdaFstate=1,
+                 lambdaBtrnd =1,
+                 lambdaFtrnd =1) {
+
+  # Prepare OM window for projection
+  om =fwdWindow(om, eq, end=end)
+
+  # Extract and prepare recruitment deviations
+  sr =attributes(eq)$sr
+  recDevs =FLQuant(
+    exp(sample(c(residuals(sr) - median(residuals(sr))),
+               (end - start + 1) * nits, replace=TRUE)),
+    dimnames=list(year=start:end, iter=seq(nits)))
+
+  # Optional: (can be turned off if not needed)
+  shortCut =rlnoise(nits, FLQuant(0, dimnames=list(year=start:end)),sd=sd, b=b)
+
+  ## Data 
+  getMSY<-function(x){
+    fbar(x)=FLQuant(refpts(x)["msy","harvest",drop=T])
+    
+    tsbMSY=quantSums(stock.wt(x)[-1]%*%stock.n(x)[-1])
+    MSY   =catch(x)
+    hMSY  =catch(x)%/%ebiomass(x)
+    ssb   =ssb(x)
+    f     =fbar(x)
+    
+    rbind(FLPar("tsb"=tsbMSY[drop=TRUE]),FLPar("yield"=MSY[drop=TRUE]),FLPar("hrate"=hMSY[drop=TRUE]),
+          FLPar("ssb"=ssb[drop=TRUE]),FLPar("harvest"=f[drop=TRUE]))}
+  
+  msy=getMSY(eq)
+  
+  MP=FLQuants(catch =catch(om),
+              survey=tsb(om[-1])%/%msy["tsb"],
+              hrate =(catch(om)%/%ebiomass(om[-1]))%*%msy["hrate"],
+              ssb   =ssb( om[-1])%/%msy["ssb"],
+              f     =fbar(om[-1])%/%msy["harvest"])
+
+  MP[["sTrnd"]]=window(trend(MP$survey[,ac((start-n):start)],n=n),end=end)
+  MP[["hTrnd"]]=window(trend(MP$hrate[, ac((start-n):start)],n=n),end=end)
+  MP[["ssb"]]  =window(trend(MP$ssb[,   ac((start-n):start)],n=n),end=end)
+  MP[["f"]]    =window(trend(MP$f[,     ac((start-n):start)],n=n),end=end)
+                
+  MP$catch[ ,ac(start:end)]=as.numeric(NA)
+  MP$survey[,ac(start:end)]=as.numeric(NA)
+  MP$hrate[ ,ac(start:end)]=as.numeric(NA)
+  MP$ssb[   ,ac(start:end)]=as.numeric(NA)
+  MP$f[     ,ac(start:end)]=as.numeric(NA)
+
+  # Iterate over projection years applying PID HCR
+  for (iYr in start:(end)) {
+
+    MP$catch[,ac(iYr)]=catch(om)[,ac(iYr-1)]
+    
+if (!FALSE){
+
+    MP$survey[,ac(iYr-1)]=tsb(om[-1])[,ac(iYr-1)]%/%msy["tsb"]
+    MP$hrate[ ,ac(iYr-1)]=(MP$catch[,ac(iYr-1)]%/%ebiomass(om)[,ac(iYr-1)])%/%msy["harvest"]
+    
+    # Calculate trends
+    #tr    =calcTrend(window(omHist,end=iYr-1), n=3)
+ 
+    MP$sTrnd[ ,ac(iYr-1)]=trend(MP$survey[,ac(iYr-(n:1))],n=n)
+    MP$hTrnd[ ,ac(iYr-1)]=trend(MP$hrate[ ,ac(iYr-(n:1))],n=n)
+    
+    # Apply nextCatch() separately per iteration
+    #CNext =numeric(nits)
+
+    for (it in seq_len(nits)) {
+      
+      MP$catch[,ac(iYr),,,,it] =
+      nextCatch(
+        bstate       =MP$survey[,ac(iYr-1),,,,it],
+        fstate       =MP$hrate[,ac(iYr-1),,,,it],
+        btrnd        =MP$sTrnd[,ac(iYr-1),,,,it],
+        ftrnd        =MP$hTrnd[,ac(iYr-1),,,,it],
+        aucBstate    =auc[1],
+        aucFstate    =auc[2],
+        aucBtrnd     =auc[3],
+        aucFtrnd     =auc[4],
+        ent          =ent,
+        CNow         =c(MP$catch[,ac(iYr-1),,,,it]),
+        lambdaBstate =lambdaBstate,
+        lambdaFstate =lambdaFstate,
+        lambdaBtrnd  =lambdaBtrnd,
+        lambdaFtrnd  =lambdaFtrnd,
+        Kp           =Kp,
+        entLow       =0,
+        entHigh      =1,
+        gMin         =gMin,
+        maxChange    =maxChange)
+      
+      }}
+    
+    om =FLasher::fwd(om,control=fwdControl(year =iYr,
+                                           quant="catch",
+                                           value=MP$catch[,ac(iYr)]),
+              sr       =eq,
+              deviances=recDevs[, ac(iYr)])}
+MP<<-FLQuants(llply(MP,window, start=start+1))
+  om}
+```
+
+
+```{r eqs}
+sgs=FLBRPs(llply(icesdata,eql,model="segreg"))  
+
+R0 =ldply(sgs, function(x) data.frame(r0=c(params(x)["a"]*params(x)["b"])))
+
+bhs=foreach(id=ids, .packages=c("FLCore","FLBRP","FLCandy")) %dopar% {
+  eql(icesdata[[id]], model="bevholtSV", prior_r0=R0[R0$.id == id,"r0"], cv_r0=0.1)}
+bhs=FLBRPs(bhs)
+names(bhs)=ids 
+```
+
+
+```{r, PID,  fig.width=10,fig.height=5}
+save(bhs,file="C:/tmp/bhs.RData")
+
+rtn=pidMSE(icesdata[[27]],bhs[[27]])
+
+plot(rtn)+
+  geom_vline(aes(xintercept=2021),col="blue")
+```
+**Figure `r iFig=iFig+1; iFig`** 
+
+
+We embed `nextCatch()` in a forward-projection MSE similar to the ICES
+HCR example in your existing code.
+
+```{r pid-mse-wrapper}
+#' Run MSE with PID-style HCR for a single stock
+#'
+#' @param om    FLStock operating model.
+#' @param eq    FLBRP equilibrium reference points.
+#' @param start Integer. First projection year.
+#' @param end   Integer. Last projection year.
+#' @param nits  Integer (default 100). Number of iterations/replicates.
+#' @param Kp Numeric (default 0.5). Proportional gain.
+#' @param gMin Numeric (default 0.2). Minimum entropy-based gain.
+#' @param maxChange Numeric (default 0.3). Max ± annual TAC change.
+#' @param lambda* Numeric (default 1.0 each). Weight multipliers for indicators.
+#'
+#' @return FLStock with projected catch guided by PID HCR.
+#'
+#' @details
+#'   For each year in [start, end), computes indicators (bstate, fstate,
+#'   btrnd, ftrnd, entropy, AUC) and calls nextCatch() to determine
+#'   next-year TAC. Projects forward using fwd() with recruitment
+#'   deviations sampled from the stock-recruit residuals.
+pidMSE<-function(om,eq,
+                 start, end, nits=1,
+                 Kp       =0.5,
+                 gMin     =0.2,
+                 maxChange=0.3,
+                 lambdaBstate=1.0,
+                 lambdaFstate=1.0,
+                 lambdaBtrnd =1.0,
+                 lambdaFtrnd =1.0) {
+
+  # Prepare OM window for projection
+  om =fwdWindow(om, eq, end=end)
+
+  # Extract and prepare recruitment deviations
+  sr =attributes(eq)$sr
+  recDevs =FLQuant(
+    exp(sample(c(residuals(sr) - median(residuals(sr))),
+               (end - start + 1) * nits, replace=TRUE)),
+    dimnames=list(year=start:end, iter=seq(nits))
+  )
+
+  # Optional: observation error (can be turned off if not needed)
+  shortCut =rlnoise(nits,
+                      FLQuant(0, dimnames=list(year=start:end)),
+                      sd=0.3, b=0.5)
+
+  # Iterate over projection years applying PID HCR
+  for (iYr in start:(end - 1)) {
+
+    # Extract current year's catch
+    CNow =quantSums(catch(om)[, ac(iYr)])
+
+    # Subset OM data up to current year for indicator calculations
+    omHist =om[, ac(dims(om)$minyear:iYr)]
+
+    # Calculate state (bstate, fstate) at current year
+    st     =calcState(omHist, eq)
+
+    # Calculate trends
+    tr    =calcTrend(window(omHist,end=iYr-1), n=3)
+   
+    # Calculate entropy from biomass series
+    B_series =quantSums(ssb(omHist))
+    ent =calcEntropy(B_series)
+
+    # Get AUC values (precomputed or estimated here)
+    aucs =calcAUC(omHist, eq)
+
+    # Apply nextCatch() separately per iteration
+    CNext =numeric(nits)
+
+    for (it in seq_len(nits)) {
+      CNext[it] =nextCatch(
+        bstate       =st$bstate,
+        fstate       =st$fstate,
+        btrnd        =tr$btrnd,
+        ftrnd        =tr$ftrnd,
+        aucBstate    =aucs["aucBstate"],
+        aucFstate    =aucs["aucFstate"],
+        aucBtrnd     =aucs["aucBtrnd"],
+        aucFtrnd     =aucs["aucFtrnd"],
+        ent          =ent,
+        CNow         =c(CNow)[it],
+        lambdaBstate =lambdaBstate,
+        lambdaFstate =lambdaFstate,
+        lambdaBtrnd  =lambdaBtrnd,
+        lambdaFtrnd  =lambdaFtrnd,
+        Kp           =Kp,
+        entLow       =0,
+        entHigh      =1,
+        gMin         =gMin,
+        maxChange    =maxChange
+      )
+    }
+
+    # Forward projection: apply PID-determined catch
+    om =FLasher::fwd(om,
+              control=fwdControl(
+                year =iYr + 1,
+                quant="catch",
+                value=CNext[1]
+              ),
+              sr      =eq,
+              deviances= recDevs[, ac(iYr + 1)])
+  }
+
+  om}
+```
+
+# Multi-stock MSE and performance metrics
+
+We run the PID HCR across all Category 1 stocks in parallel.
+
+
+
+```{r pid-mse-all, eval=FALSE}
+start =2020
+end   =2030
+nits  =100
+
+# Example PID parameters (these will be tuned)
+Kp        =0.4
+gMin      =0.2
+maxChange =0.3
+
+lambdaBstate =1.0
+lambdaFstate =1.0
+lambdaBtrnd  =1.0
+lambdaFtrnd  =1.0
+
+
+ncores =detectCores() - 2
+cl     =makeCluster(ncores)
+registerDoParallel(cl)
+
+msePID =foreach(id=ids[35],
+                  .packages=c("FLCore", "FLBRP", "FLasher", "icesdata")) %dopar% {
+  try({
+     pidMSE(om=icesdata[[id]], 
+            eq=bhs[[id]],
+            start=start, end=end, nits=nits,
+            Kp=Kp, gMin=gMin, maxChange=maxChange,
+            lambdaBstate=lambdaBstate,
+            lambdaFstate=lambdaFstate,
+            lambdaBtrnd =lambdaBtrnd,
+            lambdaFtrnd =lambdaFtrnd)
+  }, silent=TRUE)}
+
+stopCluster(cl)
+names(msePID) =ids
+
+# Drop failed runs
+msePID =msePID[!sapply(msePID, inherits, "try-error")]
+
+# Save results
+save(msePID, file="C:/active/bim/tex/report/data/results/msePID.RData")
+```
+
+# Visualising PID TAC trajectories
+
+```{r plot-pid-tac, fig.width=10, fig.height=12,eval=FALSE}
+ctcPID =FLQuants(mlply(names(msePID), function(id)
+  catch(msePID[[id]]) / attributes(msePID[[id]])$eqsim[["Catchequi"]]
+))
+
+names(ctcPID) =names(msePID)
+names(ctcPID)[grep("her.27.1-24a514a", names(ctcPID))] ="her.27.1-24"
+
+plot(ctcPID) +
+  geom_path(
+    aes(year, data), col="grey80",
+    data=subset(ldply(names(ctcPID),
+                        function(qname)
+                          cbind(qname=qname,
+                                as.data.frame(iter(ctcPID[[qname]], 1),
+                                              drop=TRUE))),
+                  year > 2024)
+  ) +
+  geom_hline(aes(yintercept=1), col="grey") +
+  facet_wrap(~qname, scale="free_y", ncol=4) +
+  labs(
+    title="Cat 1: PID HCR – Catch / MY",
+    x="Year",
+    y=expression(Catch/MY)
+  ) +
+  theme_minimal(base_size=12) +
+  theme(
+    legend.position  ="bottom",
+    legend.title     =element_blank(),
+    axis.text        =element_blank(),
+    axis.ticks       =element_blank(),
+    panel.grid.minor =element_blank(),
+    panel.grid.major =element_line(color="grey90"),
+    plot.title       =element_text(face="bold", size=14),
+    plot.subtitle    =element_text(size=12, color="grey30"),
+    panel.spacing    =unit(0, "lines")
+  )
+```
+
+**Figure `r iFig =iFig + 1; iFig`** TACs under the PID HCR (catch
+relative to MY) for Category 1 stocks.
+
+# Performance metrics and risk evaluation
+
+```{r compute-performance-metrics,eval=FALSE}
+#' Compute summary metrics across stocks and iterations
+#'
+#' @param mseResults List of FLStock projections from MSE.
+#' @param start Integer. First projection year.
+#' @param end Integer. Last projection year.
+#' @param Blim Numeric. Biomass limit reference point.
+#'
+#' @return Data frame with one row per stock, columns for yield, risk, IAV.
+compute_metrics<-function(mseResults, start, end, Blim=NULL) {
+
+  metrics =ldply(names(mseResults), function(id) {
+    stk =mseResults[[id]]
+
+    # Mean catch over projection
+    meanCatch =mean(c(catch(stk)[, ac(start:end)]), na.rm=TRUE)
+
+    # Interannual variability in catch
+    ctc_vec =c(catch(stk)[, ac(start:end)])
+    iav =sd(diff(ctc_vec)) / mean(ctc_vec, na.rm=TRUE)
+
+    # Risk: proportion of years/iters with SSB below limit
+    ssb_vec =c(ssb(stk)[, ac(start:end)])
+    if (is.null(Blim)) {
+      Blim =0.25 * median(ssb_vec, na.rm=TRUE)
+    }
+    risk_Blim =mean(ssb_vec < Blim, na.rm=TRUE)
+
+    data.frame(
+      StockID  =id,
+      MeanCatch=meanCatch,
+      IAV      =iav,
+      Risk_Blim=risk_Blim
+    )
+  })
+
+  metrics
+}
+
+# Compute metrics for current parameter set
+perf =compute_metrics(msePID, start=start, end=end)
+
+print(perf)
+```
+
+```{r summary-table,eval=FALSE}
+iTab =iTab + 1
+
+summary_table =perf %>%
+  summarise(
+    Stocks=n(),
+    Mean_Catch=mean(MeanCatch, na.rm=TRUE),
+    SD_Catch  =sd(MeanCatch, na.rm=TRUE),
+    Mean_IAV  =mean(IAV, na.rm=TRUE),
+    Max_Risk  =max(Risk_Blim, na.rm=TRUE),
+    Stocks_Below_Risk=sum(Risk_Blim > 0.05)
+  )
+
+knitr::kable(summary_table,
+             caption=paste0("Table ", iTab, ". Summary performance metrics across stocks"))
+```
+
+# Parameter tuning with a genetic algorithm
+
+A genetic algorithm can efficiently search the parameter space to find
+parameter sets that meet risk constraints and maximise yield.
+
+```{r ga-fitness-function,eval=FALSE}
+#' Fitness function for GA tuning
+#'
+#' @param theta Numeric vector of parameters:
+#'   theta[1]=Kp
+#'   theta[2]=gMin
+#'   theta[3]=maxChange
+#'   theta[4]=lambdaBstate
+#'   theta[5]=lambdaFstate
+#'   theta[6]=lambdaBtrnd
+#'   theta[7]=lambdaFtrnd
+#'
+#' @return Numeric fitness (higher is better).
+#'
+#' @details
+#'   Runs a (reduced) MSE with the parameter set, computes performance
+#'   metrics across stocks, and returns a fitness combining yield and
+#'   risk. The function penalises parameter sets that violate risk
+#'   constraints (e.g. max risk > 0.05).
+pid_fitness<-function(theta) {
+
+  Kp        =theta[1]
+  gMin      =theta[2]
+  maxChange =theta[3]
+  lambdaB   =theta[4]
+  lambdaF   =theta[5]
+  lambdaDB  =theta[6]
+  lambaDF  =theta[7]
+
+  # Guard against invalid parameter ranges
+  if (Kp < 0 || gMin < 0 || gMin > 1 || maxChange < 0 || maxChange > 1) {
+    return(-1e6)
+  }
+
+  # Run a reduced MSE for speed (subset of stocks or fewer iterations)
+  subSIDs =ids  # or: ids[1:min(10, length(ids))]
+  nits_ga =50        # fewer iters than full MSE for speed
+
+  results =foreach(id=subSIDs,
+                     .packages=c("FLCore", "FLBRP", "FLasher", "icesdata")) %dopar% {
+    try({
+      om =icedata[[id]]
+      eq =eql(om, model="bevholtSV")
+
+      pidMSE(om, eq,
+                  start=start, end=end, nits=nits_ga,
+                  Kp=Kp, gMin=gMin, maxChange=maxChange,
+                  lambdaBstate=lambdaB,
+                  lambdaFstate=lambdaF,
+                  lambdaBtrnd =lambdaDB,
+                  lambdaFtrnd =lambdaDF)
+    }, silent=TRUE)
+  }
+
+  # Compute metrics
+  valid =!sapply(results, inherits, "try-error")
+  results =results[valid]
+
+  if (length(results) < length(subSIDs) / 2) {
+    # Many failures; penalise
+    return(-1e6)
+  }
+
+  perf_ga =compute_metrics(results, start=start, end=end)
+
+  # Aggregate fitness
+  yield_mean =mean(perf_ga$MeanCatch, na.rm=TRUE)
+  risk_max   =max(perf_ga$Risk_Blim, na.rm=TRUE)
+  iav_mean   =mean(perf_ga$IAV, na.rm=TRUE)
+
+  # Objective: maximise yield, penalise risk above 0.05, minimise IAV
+  R0    =0.05
+  alpha =100
+  beta  =1
+
+  fitness =yield_mean - alpha * max(0, risk_max - R0) - beta * iav_mean
+
+  return(fitness)
+}
+```
+
+```{r ga-tuning, eval=FALSE}
+# Run GA for parameter tuning
+# (Set eval=FALSE} only if you have significant compute time available)
+
+# Set up parallel backend for GA
+ncores_ga =detectCores() - 2
+cl_ga     =makeCluster(ncores_ga)
+registerDoParallel(cl_ga)
+
+# Run GA
+ga_res =ga(
+  type="real-valued",
+  fitness=pid_fitness,
+  lower=c(
+    0.05,   # Kp
+    0.1,    # gMin
+    0.1,    # maxChange
+    0.5,    # lambdaBstate
+    0.5,    # lambdaFstate
+    0.5,    # lambdaBtrnd
+    0.5     # lambdaFtrnd
+  ),
+  upper=c(
+    1.0,    # Kp
+    0.6,    # gMin
+    0.4,    # maxChange
+    3.0,    # lambdaBstate
+    3.0,    # lambdaFstate
+    3.0,    # lambdaBtrnd
+    3.0     # lambdaFtrnd
+  ),
+  popSize =20,
+  maxiter =30,
+  parallel=TRUE
+)
+
+stopCluster(cl_ga)
+
+# Extract best solution
+best_params =ga_res@solution
+names(best_params) =c("Kp", "gMin", "maxChange",
+                        "lambdaBstate", "lambdaFstate",
+                        "lambdaBtrnd", "lambdaFtrnd")
+
+print(best_params)
+print(summary(ga_res))
+
+# Save GA results
+save(ga_res, best_params,
+     file="C:/active/bim/tex/report/data/results/ga_tuning_results.RData")
+```
+
+# Alternative: Grid search tuning
+
+If GA is not available or you prefer explicit grid search, use this
+approach.
+
+```{r grid-search, eval=FALSE}
+# Define parameter grid
+param_grid =expand.grid(
+  Kp        =c(0.2, 0.4, 0.6),
+  gMin      =c(0.2, 0.3),
+  maxChange =c(0.2, 0.3),
+  lambdaBstate=c(1.0, 1.5),
+  lambdaFstate=c(1.0, 1.5),
+  lambdaBtrnd =c(0.8, 1.0),
+  lambdaFtrnd =c(0.8, 1.0)
+)
+
+nrow(param_grid)  # Total number of parameter combinations
+
+# Run grid search with progress reporting
+results_grid =foreach(i=seq_len(nrow(param_grid)),
+                        .combine=rbind) %dopar% {
+
+  theta =unlist(param_grid[i, ])
+  fitness =pid_fitness(theta)
+
+  cbind(param_grid[i, ], fitness=fitness)
+}
+
+# Sort by fitness (descending)
+results_grid =results_grid[order(results_grid$fitness, decreasing=TRUE), ]
+
+# Display top 10 parameter sets
+print(head(results_grid, 10))
+
+# Save grid search results
+save(results_grid, param_grid,
+     file="C:/active/bim/tex/report/data/results/grid_search_results.RData")
+```
+
+# Visualising tuning results
+
+Once GA or grid search completes, plot fitness landscape.
+
+```{r plot-ga-fitness, eval=FALSE}
+# If using GA results:
+plot(ga_res)
+
+# If using grid search results:
+ggplot(results_grid, aes(x=Kp, y=gMin, fill=fitness)) +
+  geom_tile() +
+  facet_wrap(~lambdaBstate) +
+  scale_fill_gradient2(low="red", high="green") +
+  labs(title="Grid search fitness landscape",
+       x="Kp", y="gMin", fill="Fitness") +
+  theme_minimal()
+```
+
+# Final validation with best parameters
+
+Once you identify optimal parameters (from GA or grid search), re-run the
+full MSE with those parameters and visualise results.
+
+```{r final-validation, eval=FALSE}
+# Use best parameters found during tuning
+Kp_final        =best_params["Kp"]
+gMin_final      =best_params["gMin"]
+maxChange_final =best_params["maxChange"]
+lambdaBstate_final =best_params["lambdaBstate"]
+lambdaFstate_final =best_params["lambdaFstate"]
+lambdaBtrnd_final  =best_params["lambdaBtrnd"]
+lambdaFtrnd_final  =best_params["lambdaFtrnd"]
+
+# Re-run MSE with full number of iterations (e.g. nits=500)
+msePID_final =foreach(id=ids,
+                        .packages=c("FLCore", "FLBRP", "FLasher", "icesdata")) %dopar% {
+  try({
+    om =icedata[[id]]
+    eq =eql(om, model="bevholtSV")
+
+    pidMSE(om=om, eq=eq,
+                start=start, end=end, nits=500,
+                Kp=Kp_final,
+                gMin=gMin_final,
+                maxChange=maxChange_final,
+                lambdaBstate=lambdaBstate_final,
+                lambdaFstate=lambdaFstate_final,
+                lambdaBtrnd =lambdaBtrnd_final,
+                lambdaFtrnd =lambdaFtrnd_final)
+  })
+}
+
+names(msePID_final) =ids
+msePID_final =msePID_final[!sapply(msePID_final, inherits, "try-error")]
+
+# Compute final performance
+perf_final =compute_metrics(msePID_final, start=start, end=end)
+print(perf_final)
+
+# Save final results
+save(msePID_final, perf_final,
+     file="C:/active/bim/tex/report/data/results/msePID_final.RData")
+```
+
+# Summary and conclusions
+
+This template provides:
+
+1. **`nextCatch()` function**: A generic, stock-agnostic PID-style HCR
+   that uses four indicators weighted by AUC and damped by entropy.
+
+2. **Indicator helpers**: Placeholder functions for computing bstate,
+   fstate, trends, entropy, and AUC values from FLStock objects.
+
+3. **MSE framework**: Full integration into an FLR-based forward
+   projection loop, with parallel evaluation across stocks.
+
+4. **Tuning methods**: Both genetic algorithm and grid-search approaches
+   to find global parameters that perform robustly across 82 stocks.
+
+You can adapt this by:
+
+- Replacing placeholder indicator functions with your actual
+  implementations.
+- Adjusting risk thresholds, fitness objectives, and parameter bounds
+  to reflect your management goals.
+- Running GA or grid search to find optimal parameters.
+- Validating the best parameterisation on held-out stocks or longer
+  time horizons.
+
+# References
