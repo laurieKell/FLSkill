@@ -87,9 +87,8 @@ setMethod("slope", signature(object="FLQuant"),
                df_out$year = as.numeric(df_out$year)
              }
              
-             # Use as.FLQuant - simplest approach
-             rtnFlq = FLCore::as.FLQuant(df_out)
-             
+             # Use as.FLQuant - if imported correctly, don't need FLCore:: prefix
+             rtnFlq = as.FLQuant(df_out)
              units(rtnFlq) = "slope"
              
              rtnFlq})
