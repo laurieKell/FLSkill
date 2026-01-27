@@ -89,7 +89,7 @@ setMethod("slope", signature(object="FLQuant"),
             
             # Use as.FLQuant - this should work if data.frame is properly structured
             # Ensure data column is named 'data' (it should be from data.table)
-            rtnFlq = as.FLQuant(df_out)
+            rtnFlq = FLCore::as.FLQuant(df_out)
             units(rtnFlq) = "slope"
             
             rtnFlq})
