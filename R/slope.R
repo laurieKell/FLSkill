@@ -77,37 +77,20 @@ setMethod("slope", signature(object="FLQuant"),
               data.table(year = y[idxEnd], data = slopes)
             }, by = facs]
             
-            # Convert to data.frame, ensuring year is numeric
+            # Convert to data.frame
             df_out = as.data.frame(dt_out)
-            df_out$year = as.numeric(df_out$year)
             
-            # Build dimnames from output data to ensure correct dimensions
-            years_out = sort(unique(df_out$year))
-            dim_list = list(year = years_out)
-            
-            if (length(facs) > 0) {
-              for (fac in facs) {
-                dim_list[[fac]] = sort(unique(df_out[[fac]]))
-              }
+            # Ensure year is numeric (not factor)
+            if (is.factor(df_out$year)) {
+              df_out$year = as.numeric(levels(df_out$year))[df_out$year]
+            } else {
+              df_out$year = as.numeric(df_out$year)
             }
             
-            # Create array with correct dimensions
-            dims_vec = sapply(dim_list, length)
-            arr = array(NA, dim = dims_vec, dimnames = dim_list)
-            
-            # Fill array from data.frame using proper indexing
-            for (i in seq_len(nrow(df_out))) {
-              idx = list(as.character(df_out$year[i]))
-              if (length(facs) > 0) {
-                for (fac in facs) {
-                  idx[[length(idx) + 1]] = as.character(df_out[[fac]][i])
-                }
-              }
-              arr[do.call("[", c(list(arr), idx))] = df_out$data[i]
-            }
-            
-            # Create FLQuant from array - this avoids dimname conflicts
-            rtnFlq = FLQuant(arr)
+            # Use as.FLQuant - it should handle the conversion correctly
+            # The data.frame has columns: year, [other dims], data
+            # as.FLQuant expects this structure
+            rtnFlq = as.FLQuant(df_out)
             
             units(rtnFlq) = "slope"
             
