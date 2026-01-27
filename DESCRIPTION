@@ -18,7 +18,8 @@ Imports:
     plyr,
     reshape2,
     MASS,
-    methods
+    methods,
+    data.table
 Suggests:
     testthat (>= 3.0.0),
     knitr,
