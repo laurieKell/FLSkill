@@ -1,16 +1,58 @@
 require(data.table)
 
+#' @title Calculate Rolling Slope
+#' @description Calculates rolling linear regression slopes for time series data.
+#' For each position in the time series, computes the slope of a linear regression
+#' fitted to the previous n points (including the current point).
+#'
+#' @param object FLQuant or numeric vector. The time series data for which to calculate slopes.
+#' @param n Integer (default=3). The window size for calculating slopes. Must be at least 2.
+#' @param ... Additional arguments (currently not used).
+#'
+#' @return 
+#' \itemize{
+#'   \item For FLQuant: Returns an FLQuant object with slopes calculated for each year,
+#'         starting from year n. The result has units "slope" and maintains the same
+#'         structure (seasons, iterations, etc.) as the input.
+#'   \item For numeric: Returns a numeric vector of slopes, with length = length(object) - n + 1.
+#' }
+#'
+#' @details
+#' The function calculates rolling slopes by fitting linear regressions to sliding windows
+#' of size n. For an FLQuant object, slopes are calculated separately for each combination
+#' of other dimensions (season, area, iter, etc.). The slope represents the rate of change
+#' per unit time (year).
+#'
+#' @examples
+#' \dontrun{
+#' # Example with FLQuant
+#' library(FLCore)
+#' flq = FLQuant(rlnorm(400), dimnames = list(year = 1:10, season = 1:4, iter = 1:10))
+#' slopes = slope(flq, n = 3)
+#'
+#' # Example with numeric vector
+#' x = c(1, 2, 3, 5, 7, 9, 11, 13)
+#' slopes = slope(x, n = 3)
+#' # Returns slopes for windows: [1,2,3], [2,3,5], [3,5,7], [5,7,9], [7,9,11], [9,11,13]
+#' }
+#'
+#' @export
+#' @importFrom FLCore FLQuant dims as.FLQuant
+#' @importFrom data.table data.table setkey
+#' @importFrom stats coef lm
 setGeneric("slope", function(object, ...) standardGeneric("slope"))
 
+#' @rdname slope
+#' @export
 setMethod("slope", signature(object="FLQuant"),
           function(object, n=3) {
             d = dims(object)
-            ny = d$maxyear - d$minyear + 1
+            ny= d$maxyear - d$minyear + 1
             
             if (ny < n)
               stop("'n' longer than number of years")
             
-            dat = as.data.frame(object)
+            dat= as.data.frame(object)
             dt = data.table(dat)
             
             setkey(dt, year)
@@ -19,21 +61,21 @@ setMethod("slope", signature(object="FLQuant"),
             
             dt_out = dt[, {
               .sd = .SD[order(year)]
-              y = .sd$year
-              z = .sd$data
-              k = length(y)
+              y   = .sd$year
+              z   = .sd$data
+              k   = length(y)
               
-              if (k < n) {
+              if (k < n) 
                 return(data.table())
-              }
+  
               
-              idx_end = n:k
-              slopes = vapply(idx_end, function(i) {
+              idxEnd = n:k
+              slopes = vapply(idxEnd, function(i) {
                 ii = (i - n + 1):i
                 coef(lm(z[ii] ~ y[ii]))[[2]]
               }, numeric(1))
               
-              data.table(year = y[idx_end], data = slopes)
+              data.table(year = y[idxEnd], data = slopes)
             }, by = facs]
             
             rtnFlq = as.FLQuant(data.frame(dt_out))
@@ -41,6 +83,8 @@ setMethod("slope", signature(object="FLQuant"),
             
             rtnFlq})
 
+#' @rdname slope
+#' @export
 setMethod("slope", signature(object = "numeric"),
           function(object, n = 3) {
             
@@ -50,8 +94,8 @@ setMethod("slope", signature(object = "numeric"),
             if (k < n)
               stop("'n' longer than length(object)")
             
-            idx_end = n:k
-            slopes = vapply(idx_end, function(i) {
+            idxEnd = n:k
+            slopes = vapply(idxEnd, function(i) {
               ii = (i - n + 1):i
               coef(lm(object[ii] ~ year[ii]))[[2]]
             }, numeric(1))
