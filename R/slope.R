@@ -80,60 +80,16 @@ setMethod("slope", signature(object="FLQuant"),
             # Convert to data.frame
             df_out = as.data.frame(dt_out)
             
-            # Ensure year is numeric (not factor)
+            # Ensure year is numeric (not factor)  
             if (is.factor(df_out$year)) {
               df_out$year = as.numeric(levels(df_out$year))[df_out$year]
             } else {
               df_out$year = as.numeric(df_out$year)
             }
             
-            # Build dimnames from output data
-            years_out = sort(unique(df_out$year))
-            dim_list = list(year = as.character(years_out))
-            
-            if (length(facs) > 0) {
-              for (fac in facs) {
-                dim_list[[fac]] = as.character(sort(unique(df_out[[fac]])))
-              }
-            }
-            
-            # Get other dimensions from original object (quant, unit, season, area, iter)
-            # These should remain the same as input
-            orig_dims = dimnames(object)
-            for (dim_name in c("quant", "unit", "season", "area", "iter")) {
-              if (!is.null(orig_dims[[dim_name]]) && length(orig_dims[[dim_name]]) > 0) {
-                dim_list[[dim_name]] = orig_dims[[dim_name]]
-              }
-            }
-            
-            # Create FLQuant with all dimensions properly set
-            rtnFlq = FLQuant(NA, dimnames = dim_list)
-            
-            # Fill values by matching dimension values
-            for (i in seq_len(nrow(df_out))) {
-              # Build index for this row - use character names for dimensions
-              year_char = as.character(df_out$year[i])
-              
-              if (length(facs) == 0) {
-                # Simple case: just year dimension
-                rtnFlq[, year = year_char] = df_out$data[i]
-              } else {
-                # Multiple dimensions - build index list
-                idx_call = list(rtnFlq, year = year_char)
-                for (fac in facs) {
-                  idx_call[[fac]] = as.character(df_out[[fac]][i])
-                }
-                # Set other dimensions to first value if not specified
-                for (dim_name in c("quant", "unit", "season", "area", "iter")) {
-                  if (!is.null(dim_list[[dim_name]]) && !dim_name %in% names(idx_call)) {
-                    idx_call[[dim_name]] = dim_list[[dim_name]][1]
-                  }
-                }
-                idx_call$value = df_out$data[i]
-                rtnFlq = do.call("[<-", idx_call)
-              }
-            }
-            
+            # Use as.FLQuant - this should work if data.frame is properly structured
+            # Ensure data column is named 'data' (it should be from data.table)
+            rtnFlq = as.FLQuant(df_out)
             units(rtnFlq) = "slope"
             
             rtnFlq})
