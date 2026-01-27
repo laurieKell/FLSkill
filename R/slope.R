@@ -87,67 +87,8 @@ setMethod("slope", signature(object="FLQuant"),
                df_out$year = as.numeric(df_out$year)
              }
              
-             # Build dimnames from output - this ensures correct structure
-             years_out = sort(unique(df_out$year))
-             dim_list = list(year = as.character(years_out))
-             
-             # Add other dimensions from output
-             if (length(facs) > 0) {
-               for (fac in facs) {
-                 dim_list[[fac]] = as.character(sort(unique(df_out[[fac]])))
-               }
-             }
-             
-             # Get other dimensions from original object (quant, unit, season, area, iter)
-             orig_dims = dimnames(object)
-             for (dim_name in c("quant", "unit", "season", "area", "iter")) {
-               if (!is.null(orig_dims[[dim_name]]) && length(orig_dims[[dim_name]]) > 0) {
-                 dim_list[[dim_name]] = orig_dims[[dim_name]]
-               }
-             }
-             
-             # Create FLQuant with correct dimensions
-             rtnFlq = FLQuant(NA, dimnames = dim_list)
-             
-             # Fill values by matching rows in data.frame to FLQuant positions
-             # Use a simpler approach: convert to array, fill, convert back
-             dim_names = names(dim_list)
-             dims_vec = sapply(dim_list, length)
-             
-             # Convert FLQuant to array for easier indexing
-             arr = array(rtnFlq@.Data, dim = dims_vec, dimnames = dim_list)
-             
-             for (i in seq_len(nrow(df_out))) {
-               year_char = as.character(df_out$year[i])
-               
-               if (length(facs) == 0) {
-                 # Simple case: just year
-                 year_idx = which(dim_list$year == year_char)
-                 arr[year_idx] = df_out$data[i]
-               } else {
-                 # Multiple dimensions - build index list in correct order
-                 idx_list = list()
-                 
-                 # Build index in the order of dim_names
-                 for (dim_name in dim_names) {
-                   if (dim_name == "year") {
-                     idx_list[[dim_name]] = which(dim_list$year == year_char)
-                   } else if (dim_name %in% facs) {
-                     fac_val = as.character(df_out[[dim_name]][i])
-                     idx_list[[dim_name]] = which(dim_list[[dim_name]] == fac_val)
-                   } else {
-                     # Other dimensions - use first element
-                     idx_list[[dim_name]] = 1
-                   }
-                 }
-                 
-                 # Use do.call to index the array
-                 arr[do.call("[", c(list(arr), idx_list))] = df_out$data[i]
-               }
-             }
-             
-             # Convert back to FLQuant
-             rtnFlq = FLQuant(arr)
+             # Use as.FLQuant - simplest approach
+             rtnFlq = FLCore::as.FLQuant(df_out)
              
              units(rtnFlq) = "slope"
              
