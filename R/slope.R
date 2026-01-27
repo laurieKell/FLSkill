@@ -37,7 +37,7 @@
 #' }
 #'
 #' @export
-#' @importFrom FLCore FLQuant dims as.FLQuant
+#' @importFrom FLCore FLQuant dims as.FLQuant units<-
 #' @importFrom stats coef lm
 setGeneric("slope", function(object, ...) standardGeneric("slope"))
 
@@ -77,7 +77,38 @@ setMethod("slope", signature(object="FLQuant"),
               data.table(year = y[idxEnd], data = slopes)
             }, by = facs]
             
-            rtnFlq = as.FLQuant(data.frame(dt_out))
+            # Convert to data.frame, ensuring year is numeric
+            df_out = as.data.frame(dt_out)
+            df_out$year = as.numeric(df_out$year)
+            
+            # Build dimnames from output data to ensure correct dimensions
+            years_out = sort(unique(df_out$year))
+            dim_list = list(year = years_out)
+            
+            if (length(facs) > 0) {
+              for (fac in facs) {
+                dim_list[[fac]] = sort(unique(df_out[[fac]]))
+              }
+            }
+            
+            # Create array with correct dimensions
+            dims_vec = sapply(dim_list, length)
+            arr = array(NA, dim = dims_vec, dimnames = dim_list)
+            
+            # Fill array from data.frame using proper indexing
+            for (i in seq_len(nrow(df_out))) {
+              idx = list(as.character(df_out$year[i]))
+              if (length(facs) > 0) {
+                for (fac in facs) {
+                  idx[[length(idx) + 1]] = as.character(df_out[[fac]][i])
+                }
+              }
+              arr[do.call("[", c(list(arr), idx))] = df_out$data[i]
+            }
+            
+            # Create FLQuant from array - this avoids dimname conflicts
+            rtnFlq = FLQuant(arr)
+            
             units(rtnFlq) = "slope"
             
             rtnFlq})
