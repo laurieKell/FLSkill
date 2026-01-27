@@ -37,7 +37,7 @@
 #' }
 #'
 #' @export
-#' @importFrom FLCore FLQuant dims as.FLQuant units<-
+#' @importFrom FLCore FLQuant dims as.FLQuant
 #' @importFrom stats coef lm
 setGeneric("slope", function(object, ...) standardGeneric("slope"))
 
