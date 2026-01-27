@@ -1,4 +1,4 @@
-require(data.table)
+#' @importFrom data.table data.table setkey
 
 #' @title Calculate Rolling Slope
 #' @description Calculates rolling linear regression slopes for time series data.
@@ -38,7 +38,6 @@ require(data.table)
 #'
 #' @export
 #' @importFrom FLCore FLQuant dims as.FLQuant
-#' @importFrom data.table data.table setkey
 #' @importFrom stats coef lm
 setGeneric("slope", function(object, ...) standardGeneric("slope"))
 
