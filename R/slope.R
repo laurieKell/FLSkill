@@ -37,7 +37,7 @@
 #' }
 #'
 #' @export
-#' @importFrom FLCore FLQuant dims as.FLQuant
+#' @import FLCore
 #' @importFrom stats coef lm
 setGeneric("slope", function(object, ...) standardGeneric("slope"))
 
@@ -86,9 +86,9 @@ setMethod("slope", signature(object="FLQuant"),
              } else {
                df_out$year = as.numeric(df_out$year)
              }
-             
-             # Use as.FLQuant - if imported correctly, don't need FLCore:: prefix
-             rtnFlq = as.FLQuant(df_out)
+                  
+             # Use as.FLQuant with explicit namespace to ensure correct method dispatch
+             rtnFlq = FLCore::as.FLQuant(df_out)
              units(rtnFlq) = "slope"
              
              rtnFlq})
