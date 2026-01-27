@@ -110,44 +110,44 @@ setMethod("slope", signature(object="FLQuant"),
              rtnFlq = FLQuant(NA, dimnames = dim_list)
              
              # Fill values by matching rows in data.frame to FLQuant positions
-             # Use direct indexing which works in both sourced and package contexts
+             # Use a simpler approach: convert to array, fill, convert back
+             dim_names = names(dim_list)
+             dims_vec = sapply(dim_list, length)
+             
+             # Convert FLQuant to array for easier indexing
+             arr = array(rtnFlq@.Data, dim = dims_vec, dimnames = dim_list)
+             
              for (i in seq_len(nrow(df_out))) {
                year_char = as.character(df_out$year[i])
                
                if (length(facs) == 0) {
                  # Simple case: just year
-                 rtnFlq[, year = year_char] = df_out$data[i]
+                 year_idx = which(dim_list$year == year_char)
+                 arr[year_idx] = df_out$data[i]
                } else {
-                 # Multiple dimensions - need to construct proper index
-                 # Find numeric positions for each dimension
-                 year_pos = which(dim_list$year == year_char)
+                 # Multiple dimensions - build index list in correct order
+                 idx_list = list()
                  
-                 # Build position vector for array indexing
-                 pos_vec = c(year_pos)
-                 for (fac in facs) {
-                   fac_pos = which(dim_list[[fac]] == as.character(df_out[[fac]][i]))
-                   pos_vec = c(pos_vec, fac_pos)
-                 }
-                 # Add positions for other dimensions (all 1 for first element)
-                 dim_order = c("quant", "unit", "season", "area", "iter")
-                 for (dim_name in dim_order) {
-                   if (!is.null(dim_list[[dim_name]])) {
-                     pos_vec = c(pos_vec, 1)
+                 # Build index in the order of dim_names
+                 for (dim_name in dim_names) {
+                   if (dim_name == "year") {
+                     idx_list[[dim_name]] = which(dim_list$year == year_char)
+                   } else if (dim_name %in% facs) {
+                     fac_val = as.character(df_out[[dim_name]][i])
+                     idx_list[[dim_name]] = which(dim_list[[dim_name]] == fac_val)
+                   } else {
+                     # Other dimensions - use first element
+                     idx_list[[dim_name]] = 1
                    }
                  }
                  
-                 # Use direct array indexing via .Data slot
-                 # Calculate linear index: R arrays are column-major
-                 dims_vec = sapply(dim_list, length)
-                 linear_idx = pos_vec[1]
-                 for (j in 2:length(pos_vec)) {
-                   mult = prod(dims_vec[1:(j-1)])
-                   linear_idx = linear_idx + (pos_vec[j] - 1) * mult
-                 }
-                 
-                 rtnFlq@.Data[linear_idx] = df_out$data[i]
+                 # Use do.call to index the array
+                 arr[do.call("[", c(list(arr), idx_list))] = df_out$data[i]
                }
              }
+             
+             # Convert back to FLQuant
+             rtnFlq = FLQuant(arr)
              
              units(rtnFlq) = "slope"
              
